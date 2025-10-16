@@ -24,7 +24,7 @@ function App() {
             <button className="icon-button" aria-label="favorites">
               <img src={heart} width={22} height={22} alt="favorites" />
             </button>
-            <a href="#" className="signin">Sign in</a>
+            <a className="signin">Sign in</a>
           </div>
         </header>
       </div>

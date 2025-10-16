@@ -40,20 +40,20 @@ html, body, #root {
 .page {
   display: flex;
   flex-direction: column;
-  /* min-height: 100vh; */
+  min-height: 100dvh;
 }
 
 .header{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 28px;
+  padding: 1.5rem 1.75rem;
 }
 
 .brand{
   display: inline-flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .brand-name{
@@ -63,15 +63,15 @@ html, body, #root {
 }
 
 .brand-underline{
-  width: 120px;
-  height: 10px;
-  margin-left: -14px;
-  margin-top: -3px;
+  width: 7.5rem;
+  height: 0.625rem;
+  margin-left: -0.875rem;
+  margin-top: -0.188rem;
 }
 
 .header-actions{
   display: inline-flex;
-  gap: 18px;
+  gap: 1.125rem;
   align-items: center;
 }
 
@@ -91,40 +91,40 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items:center;
-  padding: 80px 16px 0;
-  gap: 22px;
+  padding: 5rem 1rem 0;
+  gap: 1.375rem;
 }
 
 .eyebrow{
-  font-size: 32px;
+  font-size: 2rem;
   color: #111;
 }
 
 .accent{
-  font-size: 64px;
+  font-size: 4rem;
   font-weight: 200;
   color: #f5a623;
 }
 
 .title{
-  font-size: 106px;
+  font-size: 6.625rem;
   line-height: 1.05;
   font-weight: 700;
-  margin-top: -40px;
+  margin-top: -2.5rem;
 }
 
 .search{
   display: flex;
-  width: min(900px, 88%);
-  border: 4px solid #111;
-  height: 56px;
+  width: min(56.25rem, 88%);
+  border: 0.25rem solid #111;
+  height: 3.5rem;
 }
 
 .search-input{
   flex: 1;
   border: 0;
-  padding: 0 18px;
-  font-size: 18px;
+  padding: 0 1.125rem;
+  font-size: 1.125rem;
   outline: none;
 }
 
@@ -132,33 +132,30 @@ html, body, #root {
   background: #111;
   color: #fff;
   border: 0;
-  padding: 0 24px;
-  font-size: 18px;
+  padding: 0 1.5rem;
+  font-size: 1.125rem;
   cursor: pointer;
 }
 
 .subcopy{
   color: #444;
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 
 /* Providers strip */
 .box3{
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  margin-top: auto;
 }
 
 .provider-logo{
-  height: 36px;
-  margin: 0 36px;
+  height: 2.25rem;
+  margin: 0 2.25rem;
   filter: grayscale(100%);
   opacity: 0.9;
 }
 /* Slightly larger Hostinger logo for balance */
-.hostinger-logo{ height: 84px; }
-.porkbun-logo{height: 74px; margin-left: 10px; margin-right: 10px;}
+.hostinger-logo{ height: 5.25rem; }
+.porkbun-logo{height: 4.625rem; margin-left: 0.625rem; margin-right: 0.625rem;}
 
 
 /* tablets++ */
@@ -170,6 +167,8 @@ html, body, #root {
   .search-input{font-size: 18px;}
   .subcopy{font-size: 18px; text-align: center;}
   .provider-logo{ height: 26px;margin: 0 20px;}
+  .hostinger-logo{height: 60px;}
+  .porkbun-logo{height: 2.625rem; margin-left: 0.625rem; margin-right: 0.625rem;}
 }
 
 /* Regular Phone dimension */
@@ -181,6 +180,8 @@ html, body, #root {
   .search-input{font-size: 14px;}
   .subcopy{font-size: 18px; text-align: center;}
   .provider-logo{ height: 26px;margin: 0 20px;}
+  .hostinger-logo{height: 60px;}
+  .porkbun-logo{height: 2.625rem; margin-left: 0.625rem; margin-right: 0.625rem;}
 }
 
 /* Small phone dimension */
@@ -192,6 +193,8 @@ html, body, #root {
   .search-input{font-size: 14px;}
   .subcopy{font-size: 18px; text-align: center;}
   .provider-logo{ height: 26px;margin: 0 20px;}
+  .hostinger-logo{height: 60px;}
+  .porkbun-logo{height: 2.625rem; margin-left: 0.625rem; margin-right: 0.625rem;}
   .box2{margin-top: -2rem;}
   .brand-name{font-size: 0.8rem;}
   .brand-underline{width: 100px;height: 8px;}
