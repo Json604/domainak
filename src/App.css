@@ -121,6 +121,9 @@ html, body, #root {
   font-size: 2rem;
   color: #111;
 }
+@media (min-width: 1024px) {
+  .eyebrow{text-align: center;}
+}
 
 .accent{
   font-size: 4rem;
