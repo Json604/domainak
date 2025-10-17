@@ -4,6 +4,7 @@ html, body, #root {
   padding: 0;
 }
 
+/* MAIN LOADER COMP */
 .loaderContainer{
   position: absolute;
   backdrop-filter: blur(20px);
@@ -31,10 +32,31 @@ html, body, #root {
 }
 
 @keyframes draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+  to {stroke-dashoffset: 0;}
 }
+
+/* ACTIVITY INDICATOR */
+.act-zigzag-path {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: drawzigzag 1s linear backwards;
+}
+@keyframes drawzigzag {
+  to { stroke-dashoffset: 0; }
+}
+
+
+.act-circle-path {
+  stroke-dasharray: 452;
+  stroke-dashoffset: 452;
+  animation: drawcircle 1.5s ease-in-out forwards infinite;
+  animation-delay: 0.6s;
+}
+
+@keyframes drawcircle {
+  to { stroke-dashoffset: 0; }
+}
+
 
 /* --- Landing layout styles --- */
 .page {

@@ -1,5 +1,5 @@
 import '../App.css'
-import { easeInOut, motion } from "motion/react"
+import { motion } from "motion/react"
 
 const Loader = () => {
   return (
