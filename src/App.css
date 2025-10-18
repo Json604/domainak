@@ -3,6 +3,19 @@ html, body, #root {
   margin: 0;
   padding: 0;
 }
+p::selection,
+h1::selection,
+input::selection,
+textarea::selection,
+a::selection,
+img::selection,
+button::selection{
+background: #f5a623;
+}
+span::selection{
+  background: #f5a623;
+  color: #111;
+}
 
 /* MAIN LOADER COMP */
 .loaderContainer{
@@ -143,6 +156,7 @@ html, body, #root {
   width: min(56.25rem, 88%);
   border: 0.25rem solid #111;
   height: 3.5rem;
+  border-radius: 15px;
 }
 
 .search-input{
@@ -151,6 +165,7 @@ html, body, #root {
   padding: 0 1.125rem;
   font-size: 1.125rem;
   outline: none;
+  border-radius: 15px;
 }
 
 .search-btn{
