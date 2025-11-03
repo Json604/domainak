@@ -27,7 +27,7 @@ function App() {
         <main className="hero">
           <div className='cta'>
             <p className="eyebrow">Stop guessing. <span className="accent">Search once.</span></p>
-            <h1 className='title'>Comapare all.</h1>
+            <h1 className='title'>Compare all.</h1>
           </div>
           <form className="search" onSubmit={(e) => e.preventDefault()}>
             <input className="search-input" placeholder="Search for a domain name to compare"/>
