@@ -9,6 +9,15 @@ import wip2 from './assets/wip2.svg'
 function App() {
   const [searchPressed, setSearchPressed] = useState(false)
   const [wip, setWip] = useState(1)
+  
+  useEffect(() => {
+    const img1 = new Image()
+    const img2 = new Image()
+
+    img1.src = wip1
+    img2.src = wip2
+  }, [])
+
 
   useEffect(() => {
     if(!searchPressed) return
