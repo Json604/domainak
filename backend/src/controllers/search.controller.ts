@@ -2,8 +2,8 @@ import {searchService} from "../services/search.service.ts"
 
 export const searchController = async (req,res,next) => {
     try {
-        // const {search} = req.body
-        const results = await searchService()
+        const domain = req.query.q
+        const results = await searchService(domain)
 
         res.json({
             success: true,
