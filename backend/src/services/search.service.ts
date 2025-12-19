@@ -2,6 +2,7 @@ import { connect } from "puppeteer-real-browser";
 import { dynaService } from "./registrars/dynadot.ts";
 import { godaddyService } from "./registrars/godaddy.ts";
 import { porkbunservice } from "./registrars/porkbun.ts";
+import { hostingerService } from "./registrars/hostinger.ts";
 
 export const searchService = async(domain) => {
     let combinedRes = []
@@ -26,6 +27,7 @@ export const searchService = async(domain) => {
     const dynaPage = await context.newPage()
     const godaddyPage = await context.newPage()
     const porkbunPage = await context.newPage()
+    const hostingerPage = await context.newPage()
 
     console.log('Regsitrar pages created');
 
@@ -34,6 +36,7 @@ export const searchService = async(domain) => {
         dynaService(dynaPage, domain),
         godaddyService(godaddyPage, domain),
         porkbunservice(porkbunPage,domain),
+        hostingerService(hostingerPage, domain)
     ]
 
     const result = await Promise.all(Promises)

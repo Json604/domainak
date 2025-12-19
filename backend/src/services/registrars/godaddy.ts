@@ -9,7 +9,7 @@ export const godaddyService = async (godaddyPage, domain) => {
 
     const response = await responsePromise;
     console.log('🅖 Godaddy network Req promise resolved');
-    console.log("🅖 copying godaddy data");
+    
     const godaddyRes = await response.json()
     console.log('🅖 GodaddyRes copied');
 

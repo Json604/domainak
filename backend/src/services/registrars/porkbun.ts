@@ -2,6 +2,7 @@
 import { PORKBUN_URL } from "../../config/env.ts";
 
 export const porkbunservice = async(porkbunPage,domain) => {
+    await porkbunPage.bringToFront()
     await porkbunPage.goto(PORKBUN_URL)
 
     await porkbunPage.locator('::-p-aria(Domain Search)').fill(domain);
