@@ -30,8 +30,8 @@ export const searchService = async(domain) => {
     // const godaddyPage = await context.newPage()
     // const porkbunPage = await context.newPage()
     // const hostingerPage = await context.newPage()
-    // const spaceshipPage = await context.newPage()
-    const namecheapPage = await context.newPage()
+    const spaceshipPage = await context.newPage()
+    // const namecheapPage = await context.newPage()
 
     console.log('Regsitrar pages created');
 
@@ -41,8 +41,8 @@ export const searchService = async(domain) => {
         // godaddyService(godaddyPage, domain),
         // porkbunservice(porkbunPage,domain),
         // hostingerService(hostingerPage, domain),
-        // spaceshipService(spaceshipPage, domain),
-        namecheapService(namecheapPage, domain)
+        spaceshipService(spaceshipPage, domain),
+        // namecheapService(namecheapPage, domain)
     ]
 
     const result = await Promise.all(Promises)

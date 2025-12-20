@@ -1,3 +1,4 @@
+// ADD THIS LATER > Some links on this site are affiliate links. We may earn a commission at no extra cost to you.
 import { useEffect, useState } from 'react'
 import './App.css'
 import zigzag from './assets/Vector 1.svg'
