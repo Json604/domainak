@@ -1,9 +1,20 @@
 // ✅ ✅ (scrap from DOM selector) (DOES NOT WORK IN HEADLESS)
+import { SPACESHIP_URL } from "../../config/env.ts"
 
-    // SPACESHIP work code
-    // await page.waitForSelector('span.main-result__available__prices__text__purchase', { timeout: 15000 });
-    // const spaceshipPrice = await page.$eval(
-    //     'span.main-result__available__prices__text__purchase',
-    //     el => el.textContent.trim()
-    // );
-    // capturedResponses.push({ spaceshipPrice });
+export const spaceshipService = async (spaceshipPage, domain) => {
+    await spaceshipPage.goto(`${SPACESHIP_URL}?query=${domain}&tab=domains`)
+    console.log('🟤 Entered spaceship page');
+
+    await spaceshipPage.waitForSelector('span.main-result__available__prices__text__purchase', { timeout: 20000 });
+    const spaceshipRes = await spaceshipPage.$eval(
+        'span.main-result__available__prices__text__purchase',
+        el => el.textContent.trim()
+    );
+    console.log('🟤 SpaceshipRes copied');
+
+    return spaceshipRes
+
+}
+
+
+// ⚠️⚠️ not wokring for unavailable domains ⚠️⚠️

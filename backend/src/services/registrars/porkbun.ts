@@ -7,17 +7,19 @@ export const porkbunservice = async(porkbunPage,domain) => {
 
     await porkbunPage.locator('::-p-aria(Domain Search)').fill(domain);
     await porkbunPage.locator('::-p-aria(submit search)').click();
-    console.log('🅟 Porkbun domain entered and searched');
+    console.log('🟢 Porkbun domain entered and searched');
     
     const response = await porkbunPage.waitForResponse(res =>res.url().includes('/api/domains/getChecks'),{ timeout: 20000 });
-    console.log('🅟 Porkbun req found');
+    console.log('🟢 Porkbun req found');
 
     const data = await response.json();
     const items = data.results;
-    console.log('🅟 Porkbun raw data found');
+    console.log('🟢 Porkbun raw data found');
 
     const porkRes = items.find(item => item.domain === `${domain}`);
-    console.log('🅟 porkRes copied');
+    console.log('🟢 porkRes copied');
 
     return porkRes
 }    
+
+// ⚠️⚠️ only works when tab in focus ⚠️⚠️ (keep in mind)
