@@ -4,7 +4,6 @@ import { parse } from "tldts";
 import { NAMECHEAP_URL } from "../../config/env.ts";
 
 export const namecheapService = async (namecheapPage, domain) => {
-    let namecheapRes = []
     const tld = parse(domain, {allowPrivateDomains: true}).publicSuffix
 
     const ReqPromises = [
@@ -22,9 +21,22 @@ export const namecheapService = async (namecheapPage, domain) => {
     const responses = await Promise.all(responsePromise.map(res => res.json()))
     console.log(`🟠 NamecheapRes net Res Promise array reolved`);
 
-    namecheapRes.push(responses[2])
-    namecheapRes.push(responses[0].filter(item => item.Name === tld))
-    namecheapRes.push(responses[1].domains.find(item => item.name === tld))
+    let raw = []
+    raw.push(responses[2])
+    raw.push(responses[0].filter(item => item.Name === tld))
+    raw.push(responses[1].domains.find(item => item.name === tld))
+
+    let namecheapRes = {
+        registrar: 'Namecheap',
+        status: raw[0].status[0].available,
+    }
+    if(namecheapRes.status === false){
+        namecheapRes.price = null
+    } else{
+        namecheapRes.price = `$${raw[1][0].Pricing.Price}`
+    }
+ 
+
     console.log(`🟠 NamecheapRes copied`);
 
     return namecheapRes;

@@ -10,7 +10,19 @@ export const godaddyService = async (godaddyPage, domain) => {
     const response = await responsePromise;
     console.log('⚪️ Godaddy network Req promise resolved');
     
-    const godaddyRes = await response.json()
+    const raw = await response.json()
+    
+    let godaddyRes = {}
+    godaddyRes.registrar = 'Godaddy'
+    godaddyRes.status = raw.ExactMatchDomain.AvailabilityLabel
+
+    if(godaddyRes.status === 'taken'){
+        godaddyRes.price = null
+    } else{
+        const product = raw.Products[0];
+        godaddyRes.price = product.PriceInfo.CurrentPriceDisplay
+    }
+
     console.log('⚪️ GodaddyRes copied');
 
     return godaddyRes

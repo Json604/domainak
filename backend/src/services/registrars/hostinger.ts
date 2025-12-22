@@ -13,9 +13,23 @@ export const hostingerService = async (hostingerPage, domain) => {
     const response = await responsePromise
     console.log("🟣 Hostinger net Req promise resolved");
 
-    let hostingerRes = await response.json()
-    if(hostingerRes.data.result.domain_name !== domain){
-        hostingerRes = `Domain Unavailable on hostinger.`
+    const raw = await response.json()
+    let hostingerRes
+
+    if(raw.data.result.domain_name !== domain){
+        hostingerRes = {
+            registrar: 'Hostinger',
+            status: `Unavailable`,
+            price: null
+        }
+    }
+    else{
+        hostingerRes = {
+            registrar: 'Hostinger',
+            status: raw.data.result.available,
+            price: raw.data.result.product.price.purchase
+            // price: `$${raw.data.result.product.price.purchase}`
+        }
     }
     console.log('🟣 HostingerRes copied');
 

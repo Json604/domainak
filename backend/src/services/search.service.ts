@@ -26,23 +26,23 @@ export const searchService = async(domain) => {
     });
     const context = await browser.createBrowserContext()
 
-    // const dynaPage = await context.newPage()
-    // const godaddyPage = await context.newPage()
-    // const porkbunPage = await context.newPage()
-    // const hostingerPage = await context.newPage()
+    const dynaPage = await context.newPage()
+    const godaddyPage = await context.newPage()
+    const porkbunPage = await context.newPage()
+    const hostingerPage = await context.newPage()
     const spaceshipPage = await context.newPage()
-    // const namecheapPage = await context.newPage()
+    const namecheapPage = await context.newPage()
 
     console.log('Regsitrar pages created');
 
     console.log('Parallel scraping started');
     const Promises = [
-        // dynaService(dynaPage, domain),
-        // godaddyService(godaddyPage, domain),
-        // porkbunservice(porkbunPage,domain),
-        // hostingerService(hostingerPage, domain),
+        dynaService(dynaPage, domain),
+        godaddyService(godaddyPage, domain),
+        porkbunservice(porkbunPage,domain),
+        hostingerService(hostingerPage, domain),
         spaceshipService(spaceshipPage, domain),
-        // namecheapService(namecheapPage, domain)
+        namecheapService(namecheapPage, domain)
     ]
 
     const result = await Promise.all(Promises)

@@ -6,10 +6,14 @@ export const spaceshipService = async (spaceshipPage, domain) => {
     console.log('🟤 Entered spaceship page');
 
     await spaceshipPage.waitForSelector('span.main-result__available__prices__text__purchase', { timeout: 20000 });
-    const spaceshipRes = await spaceshipPage.$eval(
+    const raw = await spaceshipPage.$eval(
         'span.main-result__available__prices__text__purchase',
         el => el.textContent.trim()
     );
+    let spaceshipRes = {
+        registrar: 'Spaceship',
+        price: raw
+    }
     console.log('🟤 SpaceshipRes copied');
 
     return spaceshipRes

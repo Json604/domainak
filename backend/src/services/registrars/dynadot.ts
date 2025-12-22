@@ -11,12 +11,19 @@ export const dynaService = async (dynaPage, domain) => {
     const response = await responsePromise
     console.log('🔵 Dynadot network req resolved');
 
-    const dynaResponse = await response.json();
-    const items = dynaResponse.data.resultItems;
+    const raw = await response.json();
+    const items = raw.data.resultItems;
     
     console.log("🔵 Filtering DynaRes");
-    const exactResult = await items.find(item => item.domain === `${domain}`);
+    const exactMatch = await items.find(item => item.domain === `${domain}`);
     console.log("🔵 DynaRes Filtered");
 
-    return exactResult;
+    const dynaRes = {
+        registrar: 'Dynadot',
+        status: exactMatch.status,
+        price: exactMatch.price
+    }
+    console.log('🔵 DynaRes copied');
+
+    return dynaRes;
 }     
