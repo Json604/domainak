@@ -6,37 +6,44 @@ import { HOSTINGER_URL } from "../../config/env.ts";
 
 export const hostingerService = async (hostingerPage, domain) => {
     try {
-        const responsePromise = hostingerPage.waitForResponse(res => res.url().includes("/api/domain/single-domain-search"), {timeout: 20000})
-        console.log('🟣 Hostinger net req promise started');
+        const responsePromise = hostingerPage.waitForResponse(res => res.url().includes("/api/domain/single-domain-search"))
+
+        const timeoutPromise = new Promise(resolve => {
+            setTimeout(() => resolve(null),10000)
+        })
+
+        console.log('🟣 Hostinger response and timeout promise started');
         
         await hostingerPage.goto(`${HOSTINGER_URL}?domain=${domain}&from=domain-name-search`)
     
-        const response = await responsePromise
-        console.log("🟣 Hostinger net Req promise resolved");
-        console.log(response);
+        const response = await Promise.race([
+            responsePromise,
+            timeoutPromise
+        ])
+        console.log("🟣 Hostinger response and timeout promise resolved");
 
-        if(response){
-            const raw = await response.json()
-            console.log(raw);
-    
-            if(raw.data.result.domain_name !== domain || !raw.data.result.available){
-                return {
-                    registrar: 'Hostinger',
-                    status: `Unavailable`,
-                    price: null
-                }
-            }
-            return {
+        if(!response){
+            return{
                 registrar: 'Hostinger',
-                status: raw.data.result.available,
-                price: raw.data.result.product.price.purchase
-                // price: `$${raw.data.result.product.price.purchase}`
+                status: 'Unavailable',
+                price: null
             }
         }
-        return{
+
+        const raw = await response.json()
+
+        if(raw.data.result.domain_name !== domain || !raw.data.result.available){
+            return {
+                registrar: 'Hostinger',
+                status: `Unavailable`,
+                price: null
+            }
+        }
+        return {
             registrar: 'Hostinger',
-            status: 'Unavailable',
-            price: null
+            status: raw.data.result.available,
+            price: raw.data.result.product.price.purchase
+            // price: `$${raw.data.result.product.price.purchase}`
         }
     } catch (err) {
         throw{
