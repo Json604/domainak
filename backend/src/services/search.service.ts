@@ -7,8 +7,6 @@ import { spaceshipService } from "./registrars/spaceship.ts";
 import { namecheapService } from "./registrars/namecheap.ts";
 
 export const searchService = async(domain) => {
-    let combinedRes = []
-
     const { browser} = await connect({
         headless: false,
         args: [],
@@ -26,30 +24,40 @@ export const searchService = async(domain) => {
     });
     const context = await browser.createBrowserContext()
 
-    const dynaPage = await context.newPage()
-    const godaddyPage = await context.newPage()
-    const porkbunPage = await context.newPage()
+    // console.log('Beginning Primary availability check');
+    
+    // // ⚠️ Primary availability check ⚠️
+    // const primaryCheck = await Promise.allSettled([godaddyService(godaddyPage, domain)]) 
+    // console.log('Primary check resloved');
+    
+    // if((primaryCheck[0]?.value?.status.toLowerCase() === 'taken')){
+        //     return 'This domain is already taken.'
+    // }
+    
+    // const godaddyPage = await context.newPage()
+    // const dynaPage = await context.newPage()
+    // const porkbunPage = await context.newPage()
     const hostingerPage = await context.newPage()
-    const spaceshipPage = await context.newPage()
-    const namecheapPage = await context.newPage()
-
-    console.log('Regsitrar pages created');
+    // const namecheapPage = await context.newPage()
+    // const spaceshipPage = await context.newPage()
 
     console.log('Parallel scraping started');
-    const Promises = [
-        dynaService(dynaPage, domain),
-        godaddyService(godaddyPage, domain),
-        porkbunservice(porkbunPage,domain),
+
+    const secondaryPromises = await Promise.allSettled([
+        // godaddyService(godaddyPage, domain),
+        // dynaService(dynaPage, domain),
+        // porkbunservice(porkbunPage, domain),
         hostingerService(hostingerPage, domain),
-        spaceshipService(spaceshipPage, domain),
-        namecheapService(namecheapPage, domain)
-    ]
+        // namecheapService(namecheapPage, domain),
+        // spaceshipService(spaceshipPage, domain),
+    ])
 
-    const result = await Promise.all(Promises)
-    console.log('Promises resolved');
+    console.log('Promises resolved, returning combined data...');
 
-    combinedRes.push(result);
-    console.log('All data combined');
-
-    return combinedRes;
+    return{
+        result: [
+            // ...primaryCheck,
+            ...secondaryPromises
+        ]
+    };
 }

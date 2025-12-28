@@ -2,35 +2,42 @@
 import { PORKBUN_URL } from "../../config/env.ts";
 
 export const porkbunservice = async(porkbunPage,domain) => {
-    await porkbunPage.bringToFront()
-    await porkbunPage.goto(PORKBUN_URL)
-
-    await porkbunPage.locator('::-p-aria(Domain Search)').fill(domain);
-    await porkbunPage.locator('::-p-aria(submit search)').click();
-    console.log('🟢 Porkbun domain entered and searched');
+    try {
+        await porkbunPage.bringToFront()
+        await porkbunPage.goto(PORKBUN_URL)
     
-    const response = await porkbunPage.waitForResponse(res =>res.url().includes('/api/domains/getChecks'),{ timeout: 20000 });
-    console.log('🟢 Porkbun req found');
+        await porkbunPage.locator('::-p-aria(Domain Search)').fill(domain);
+        await porkbunPage.locator('::-p-aria(submit search)').click();
+        console.log('🟢 Porkbun domain entered and searched');
+        
+        const response = await porkbunPage.waitForResponse(res =>res.url().includes('/api/domains/getChecks'),{ timeout: 30000 });
+        console.log('🟢 Porkbun req found');
+    
+        const raw = await response.json();
+        console.log('🟢 Porkbun raw data found');
+    
+        const exactMatch = raw.results.find(item => item.domain === `${domain}`);
 
-    const raw = await response.json();
-    const items = raw.results;
-    console.log('🟢 Porkbun raw data found');
+        if(exactMatch && exactMatch.result === 'AVAILABLE'){
+            return{
+                registrar: 'Porkbun',
+                status: exactMatch.result,
+                price: `$${(exactMatch.extended.typePricing.registration.price)/100}`
+            }
+        }
 
-    const exactMatch = items.find(item => item.domain === `${domain}`);
-
-    const porkRes = {
-        registrar: 'Porkbun',
-        status: exactMatch.result
+        return{
+            registrar: 'Porkbun',
+            status: 'Unavailable',
+            price: null
+        }    
+    } catch (err) {
+        throw{
+            registrar: 'Porkbun',
+            type: err.name || 'Unknown Error',
+            message: err.message || 'Unknown failure'
+        }   
     }
-    if(porkRes.status === 'UNAVAILABLE'){
-        porkRes.price = null
-    } else{
-        porkRes.price = `$${(exactMatch.extended.typePricing.registration.price)/100}`
-    }
-
-    console.log('🟢 PorkRes copied');
-
-    return porkRes
 }    
 
 // ⚠️⚠️ only works when tab in focus ⚠️⚠️ (keep in mind)
