@@ -6,6 +6,15 @@ import {rateLimit} from "express-rate-limit";
 
 const app = express();
 
+// Global error handlers to prevent crash
+process.on('uncaughtException', (err) => {
+  console.error('🔴 Uncaught Exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔴 Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
@@ -26,6 +35,15 @@ app.use(express.json());
 app.use('/', searchRouter)
 
 app.get("/", (req, res) => res.json({ message: "backend/domainak.store working fine!!" }));
+
+// Express error handler middleware
+app.use((err, req, res, next) => {
+  console.error('🔴 Express error:', err.message);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error'
+  });
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} in ${NODE_ENV} mode`);

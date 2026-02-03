@@ -21,6 +21,11 @@ export const searchController = async (req,res,next) => {
         })
 
     } catch (error) {
-        next(error)
+        console.error('🔴 Search controller error:', error)
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Something went wrong while searching. Please try again.',
+            type: error.type || 'ServerError'
+        })
     }
 }

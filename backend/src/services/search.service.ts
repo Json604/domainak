@@ -7,8 +7,9 @@ import { spaceshipService } from "./registrars/spaceship.ts";
 import { namecheapService } from "./registrars/namecheap.ts";
 
 export const searchService = async(domain) => {
+    let browser = null
     try {
-        const { browser} = await connect({
+        const connection = await connect({
             headless: false,
             args: [],
             customConfig: {},
@@ -23,6 +24,7 @@ export const searchService = async(domain) => {
             //     password:'<proxy-password>'
             // }
         });
+        browser = connection.browser
         const context = await browser.createBrowserContext()
 
         // console.log('Beginning Primary availability check');
@@ -55,6 +57,9 @@ export const searchService = async(domain) => {
 
         console.log('Promises resolved, returning combined data...');
 
+        await browser.close()
+        console.log('🟢 Browser closed successfully');
+
         return{
             domain,
             result: [
@@ -63,10 +68,19 @@ export const searchService = async(domain) => {
             ]
         };
     } catch (error) {
+        console.error('🔴 Search service error:', error.message);
+        if (browser) {
+            try {
+                await browser.close()
+                console.log('🟡 Browser closed after error');
+            } catch (closeErr) {
+                console.error('🔴 Failed to close browser:', closeErr.message);
+            }
+        }
         throw{
             success: false,
-            type: error.type,
-            message: error.message,
+            type: error.name || 'UnknownError',
+            message: error.message || 'Failed to search domain',
         }
     }
 }
