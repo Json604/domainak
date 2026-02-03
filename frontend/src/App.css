@@ -5,6 +5,9 @@ html, body, #root {
 }
 p::selection,
 h1::selection,
+h2::selection,
+h6::selection,
+span::selection,
 input::selection,
 textarea::selection,
 a::selection,
@@ -68,6 +71,12 @@ span::selection{
 
 @keyframes drawcircle {
   to { stroke-dashoffset: 0; }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
 }
 
 
@@ -175,6 +184,7 @@ span::selection{
   padding: 0 1.5rem;
   font-size: 1.125rem;
   cursor: pointer;
+  border-radius: 0 10px 10px 0;
 }
 
 .subcopy{

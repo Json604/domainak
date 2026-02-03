@@ -18,10 +18,10 @@ const Loader = () => {
         initial={{y:0}}
         animate={{y:[0,20]}}
         transition={{
-        delay:1.5,
-        duration: 0.5,
-        ease:'easeInOut'
-    }}
+            delay:1.5,
+            duration: 0.5,
+            ease:'easeInOut'
+        }}
         >
             Domainak
             <svg 

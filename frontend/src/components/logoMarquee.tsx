@@ -1,11 +1,11 @@
 import '../App.css'
 import Marquee from "react-fast-marquee";
-import hostinger from '../assets/hostinger.svg'
-import godaddy from '../assets/godaddy.svg'
-import namecheap from '../assets/namecheap.svg'
-import spaceship from '../assets/spaceship.svg'
-import porkbun from '../assets/porkbun.svg'
-import dynadot from '../assets/dynadot.svg'
+import hostinger from '../assets/hostinger/h_main.svg'
+import godaddy from '../assets/godaddy/g_main.svg'
+import namecheap from '../assets/namecheap/n_main.svg'
+import spaceship from '../assets/spaceship/s_main.svg'
+import porkbun from '../assets/porkbun/p_main.svg'
+import dynadot from '../assets/dynadot/d_main.svg'
 
 const LogoMarquee = () => {
     return(

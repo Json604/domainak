@@ -1,43 +1,38 @@
 // ADD THIS LATER > Some links on this site are affiliate links. We may earn a commission at no extra cost to you.
-import { useEffect, useState } from 'react'
 import './App.css'
 import zigzag from './assets/Vector 1.svg'
 import heart from './assets/heart.svg'
 import LogoMarquee from './components/logoMarquee'
-import wip1 from './assets/wip1.svg'
-import wip2 from './assets/wip2.svg'
+// import Loader from './components/loader'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { parse } from 'tldts'
 
 function App() {
-  const [searchPressed, setSearchPressed] = useState(false)
-  const [wip, setWip] = useState(1)
-  
-  useEffect(() => {
-    const img1 = new Image()
-    const img2 = new Image()
+  const [domain, setDomain] = useState('')
+  const [error, setError] = useState(false)
+  const nav = useNavigate()
 
-    img1.src = wip1
-    img2.src = wip2
-  }, [])
+  function handleSearch(){
+    const parsed = parse(domain.trim())
+    if (!domain.trim() || !parsed.domain || !parsed.publicSuffix) {
+      setError(true)
+      return
+    }
 
-
-  useEffect(() => {
-    if(!searchPressed) return
-
-    const interval = setInterval(() => {
-      setWip(prev => (prev === 1 ? 2 : 1))
-    },300)
-
-    return () => clearInterval(interval)
-
-  }, [searchPressed])
+    setError(false)
+    const encodedDomain = encodeURIComponent(domain.trim())
+    nav(`/results?domain=${encodedDomain}`)
+  }
 
   return (
     <>
+    {/* <Loader /> */}
     <div className='page'>
 
       <div className='box1'>
         <header className="header">
-          <div className="brand" onClick={() => setSearchPressed(false)} style={{cursor:'pointer'}}>
+          <div className="brand" style={{cursor:'pointer'}}>
             <span className="brand-name">DOMAINAK</span>
             <img src={zigzag} className="brand-underline" alt="" />
           </div>
@@ -50,28 +45,22 @@ function App() {
         </header>
       </div>
 
-      {(!searchPressed) ? (
-        <>
-        <div className='box2'>
-          <main className="hero">
-            <div className='cta'>
-              <p className="eyebrow">Stop guessing. <span className="accent">Search once.</span></p>
-              <h1 className='title'>Compare all.</h1>
-            </div>
-            <form className="search" onSubmit={(e) => e.preventDefault()}>
-              <input className="search-input" placeholder="Search for a domain name to compare"/>
-              <button className="search-btn" type="submit" onClick={() => setSearchPressed(true)}>Search</button>
-            </form>
+      <div className='box2'>
+        <main className="hero">
+          <div className='cta'>
+            <p className="eyebrow">Stop guessing. <span className="accent">Search once.</span></p>
+            <h1 className='title'>Compare all.</h1>
+          </div>
+          <form className="search" onSubmit={(e) => e.preventDefault()} style={error ? { borderColor: '#d14343', animation: 'shake 0.4s' } : {}}>
+            <input className="search-input" value={domain} onChange={(e) => { setDomain(e.target.value); setError(false); }} placeholder="Search for a domain name to compare"/>
+            <button className="search-btn" type="submit" onClick={handleSearch}>Search</button>
+          </form>
+          {error && <p style={{ color: '#d14343', fontSize: '0.9rem', marginTop: '0.5rem' }}>Please enter a valid domain</p>}
 
-            <p className="subcopy">One search for all domains — availability, prices, registrars.</p>
-          </main>
-        </div>
-        </>
-      ):(
-        <div className='hero' style={{padding:0}}>
-          <img src={wip === 1 ? wip1 : wip2} style={{width:'60vw', height:'70vh'}} alt='work in progress'/>
-        </div>
-      )} 
+          <p className="subcopy">One search for all domains — availability, prices, registrars.</p>
+        </main>
+      </div>
+
         <div className='box3'>  
           <LogoMarquee/>
         </div> 
