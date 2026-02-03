@@ -7,57 +7,66 @@ import { spaceshipService } from "./registrars/spaceship.ts";
 import { namecheapService } from "./registrars/namecheap.ts";
 
 export const searchService = async(domain) => {
-    const { browser} = await connect({
-        headless: false,
-        args: [],
-        customConfig: {},
-        turnstile: true,
-        connectOption: {},
-        disableXvfb: false,
-        ignoreAllFlags: false,
-        // proxy:{
-        //     host:'<proxy-host>',
-        //     port:'<proxy-port>',
-        //     username:'<proxy-username>',
-        //     password:'<proxy-password>'
+    try {
+        const { browser} = await connect({
+            headless: false,
+            args: [],
+            customConfig: {},
+            turnstile: true,
+            connectOption: {},
+            disableXvfb: false,
+            ignoreAllFlags: false,
+            // proxy:{
+            //     host:'<proxy-host>',
+            //     port:'<proxy-port>',
+            //     username:'<proxy-username>',
+            //     password:'<proxy-password>'
+            // }
+        });
+        const context = await browser.createBrowserContext()
+
+        // console.log('Beginning Primary availability check');
+        
+        // // ⚠️ Primary availability check ⚠️
+        // const primaryCheck = await Promise.allSettled([godaddyService(godaddyPage, domain)]) 
+        // console.log('Primary check resloved');
+        
+        // if((primaryCheck[0]?.value?.status.toLowerCase() === 'taken')){
+            //     return 'This domain is already taken.'
         // }
-    });
-    const context = await browser.createBrowserContext()
+        
+        const godaddyPage = await context.newPage()
+        const dynaPage = await context.newPage()
+        const porkbunPage = await context.newPage()
+        const hostingerPage = await context.newPage()
+        const namecheapPage = await context.newPage()
+        const spaceshipPage = await context.newPage()
 
-    // console.log('Beginning Primary availability check');
-    
-    // // ⚠️ Primary availability check ⚠️
-    // const primaryCheck = await Promise.allSettled([godaddyService(godaddyPage, domain)]) 
-    // console.log('Primary check resloved');
-    
-    // if((primaryCheck[0]?.value?.status.toLowerCase() === 'taken')){
-        //     return 'This domain is already taken.'
-    // }
-    
-    const godaddyPage = await context.newPage()
-    const dynaPage = await context.newPage()
-    const porkbunPage = await context.newPage()
-    const hostingerPage = await context.newPage()
-    const namecheapPage = await context.newPage()
-    const spaceshipPage = await context.newPage()
+        console.log('Parallel scraping started');
 
-    console.log('Parallel scraping started');
+        const secondaryPromises = await Promise.allSettled([
+            godaddyService(godaddyPage, domain),
+            dynaService(dynaPage, domain),
+            porkbunservice(porkbunPage, domain),
+            hostingerService(hostingerPage, domain),
+            namecheapService(namecheapPage, domain),
+            spaceshipService(spaceshipPage, domain),
+        ])
 
-    const secondaryPromises = await Promise.allSettled([
-        godaddyService(godaddyPage, domain),
-        dynaService(dynaPage, domain),
-        porkbunservice(porkbunPage, domain),
-        hostingerService(hostingerPage, domain),
-        namecheapService(namecheapPage, domain),
-        spaceshipService(spaceshipPage, domain),
-    ])
+        console.log('Promises resolved, returning combined data...');
 
-    console.log('Promises resolved, returning combined data...');
-
-    return{
-        result: [
-            // ...primaryCheck,
-            ...secondaryPromises
-        ]
-    };
+        return{
+            domain,
+            result: [
+                // ...primaryCheck,
+                ...secondaryPromises
+            ]
+        };
+    } catch (error) {
+        throw{
+            success: false,
+            type: error.type,
+            message: error.message,
+        }
+    }
 }

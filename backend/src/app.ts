@@ -1,9 +1,15 @@
 import express from "express";
+import cors from "cors";
 import { NODE_ENV, PORT } from "./config/env.ts";
 import { searchRouter } from "./routes/search.route.ts";
 import {rateLimit} from "express-rate-limit";
 
 const app = express();
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true
+}));
 
 const limiter = rateLimit({
 	windowMs: 60 * 1000, // 1 minute
@@ -15,7 +21,6 @@ const limiter = rateLimit({
 })
 
 app.use(limiter)
-
 app.use(express.json());
 
 app.use('/', searchRouter)
