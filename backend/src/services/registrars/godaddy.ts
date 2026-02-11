@@ -1,19 +1,29 @@
-// ✅ ❌ ✅(works without waituntil + waitForNetworkIdle only) (didnt work on College's network) (DOES NOT WORK IN HEADLESS)
-import { register } from "module";
-import { GODADDY_URL } from "../../config/env.ts";
+// (DOES NOT WORK IN HEADLESS)
+import { GODADDY_URL } from "../../config/env.js";
+import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
-export const godaddyService = async (godaddyPage, domain) => {
+export const godaddyService = async (godaddyPage: any, domain:any): Promise<RegistrarResponse> => {
     try {
-        const responsePromise = godaddyPage.waitForResponse(res => res.url().startsWith('https://www.godaddy.com/en-in/domainfind/v1/search/exact?search_guid'),{timeout: 20000});
+        const responsePromise = godaddyPage.waitForResponse((res: any) => res.url().startsWith('https://www.godaddy.com/en-in/domainfind/v1/search/exact?search_guid'),{timeout: 20000});
         console.log('⚪️ Godaddy network Req Promise started');
     
         await godaddyPage.goto(`${GODADDY_URL}?domainToCheck=${domain}`)
-    
+
+        await godaddyPage.screenshot({path:'godaddy-debug.png', fullPage: true })
+
+        const html = await godaddyPage.content()
+        console.log('🔍 Page HTML:', html.substring(0, 2000))  // First 2000 chars
+        const title = await godaddyPage.title()
+        console.log('🔍 Page title:', title)
+        // If it says "Access Denied" or "Captcha", you're being blocked
+
+
+        
         const response = await responsePromise;
         console.log('⚪️ Godaddy network Req promise resolved');
         
         const raw = await response.json()
-
+        
         if(raw.ExactMatchDomain.IsAvailable && raw.ExactMatchDomain.Fqdn === domain){
             return{
                 registrar: 'Godaddy',
@@ -27,13 +37,15 @@ export const godaddyService = async (godaddyPage, domain) => {
                 price: raw.ExactMatchDomain.AftermarketMinPriceDisplay
             }
         }
-
+        
         return{
             registrar: 'Godaddy',
             status: 'Unavailable',
             price: null
         }
-    } catch (err) {
+    } catch (error) {
+        const err = error as NativeError
+        await godaddyPage.screenshot({path:'godaddy-debug.png', fullPage: true })
         throw{
             registrar: 'Godaddy',
             type: err.name || 'Unknown Error',

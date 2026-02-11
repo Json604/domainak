@@ -2,11 +2,12 @@
 // ⚠️⚠️ returns next available if taken ⚠️⚠️ (keep in mind)
 // It is checking availability server side so if returned domain is different from searched then return notAvailable
 
-import { HOSTINGER_URL } from "../../config/env.ts";
+import { HOSTINGER_URL } from "../../config/env.js";
+import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
-export const hostingerService = async (hostingerPage, domain) => {
+export const hostingerService = async (hostingerPage: any, domain: string): Promise<RegistrarResponse> => {
     try {
-        const responsePromise = hostingerPage.waitForResponse(res => res.url().includes("/api/domain/single-domain-search"))
+        const responsePromise = hostingerPage.waitForResponse((res: any) => res.url().includes("/api/domain/single-domain-search"))
 
         const timeoutPromise = new Promise(resolve => {
             setTimeout(() => resolve(null),10000)
@@ -45,7 +46,8 @@ export const hostingerService = async (hostingerPage, domain) => {
             price: raw.data.result.product.price.purchase
             // price: `$${raw.data.result.product.price.purchase}`
         }
-    } catch (err) {
+    } catch (error) {
+        const err = error as NativeError
         throw{
             registrar: 'Hostinger',
             type: err.name || 'Unknown Error',

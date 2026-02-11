@@ -1,9 +1,10 @@
 // ✅ ✅ !!!!!!!!!!!!!!!!!!!(WORKS HEADLESS)
-import { DYNADOT_URL } from "../../config/env.ts";
+import { DYNADOT_URL } from "../../config/env.js";
+import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
-export const dynaService = async (dynaPage, domain) => {
+export const dynaService = async (dynaPage: any, domain: string): Promise<RegistrarResponse> => {
     try {
-        const responsePromise = dynaPage.waitForResponse(res =>res.url().startsWith("https://www.dynadot.com/dynadot-vue-api/dynadot-service/domain-search-api?command=search_result"),{ timeout: 20000 });
+        const responsePromise = dynaPage.waitForResponse((res: any) => res.url().startsWith("https://www.dynadot.com/dynadot-vue-api/dynadot-service/domain-search-api?command=search_result"),{ timeout: 20000 });
         console.log('🔵 Dynadot network req promise started');
     
         await dynaPage.goto(`${DYNADOT_URL}?domain=${domain}`);
@@ -16,7 +17,7 @@ export const dynaService = async (dynaPage, domain) => {
         const items = raw.data.resultItems;
         
         console.log("🔵 Filtering DynaRes");
-        const exactMatch = await items.find(item => item.isExactResult === true);
+        const exactMatch = await items.find((item: any) => item.isExactResult === true);
     
         console.log("🔵 DynaRes Filtered");
 
@@ -33,7 +34,8 @@ export const dynaService = async (dynaPage, domain) => {
             status: 'Unavailable',
             price: null
         };
-    } catch (err) {
+    } catch (error) {
+        const err = error as NativeError
         throw{
             registrar: 'Dynadot',
             type: err.name || 'Unknown Error',

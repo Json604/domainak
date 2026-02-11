@@ -1,7 +1,8 @@
 // ✅ ✅ (scrap from DOM selector) (DOES NOT WORK IN HEADLESS)
-import { SPACESHIP_URL } from "../../config/env.ts"
+import { SPACESHIP_URL } from "../../config/env.js"
+import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
-export const spaceshipService = async (spaceshipPage, domain) => {
+export const spaceshipService = async (spaceshipPage: any, domain: string):Promise<RegistrarResponse> => {
     try {
         await spaceshipPage.goto(`${SPACESHIP_URL}?query=${domain}&tab=domains`)
         console.log('🟤 Entered spaceship page');
@@ -21,7 +22,7 @@ export const spaceshipService = async (spaceshipPage, domain) => {
             return{
                 registrar: 'Spaceship',
                 status: 'Available',
-                price: await spaceshipPage.$eval('span.main-result__available__prices__text__purchase', e => e.textContent.trim())
+                price: await spaceshipPage.$eval('span.main-result__available__prices__text__purchase', (e: any) => e.textContent.trim())
             }
         }
         if(afterMarketEl){
@@ -39,7 +40,8 @@ export const spaceshipService = async (spaceshipPage, domain) => {
         }
 
     
-    } catch (err) {
+    } catch (error) {
+        const err = error as NativeError
         throw{
             registrar: 'Spaceship',
             type: err.name || 'Unknown Error',

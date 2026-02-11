@@ -1,16 +1,17 @@
 import { connect } from "puppeteer-real-browser";
-import { dynaService } from "./registrars/dynadot.ts";
-import { godaddyService } from "./registrars/godaddy.ts";
-import { porkbunservice } from "./registrars/porkbun.ts";
-import { hostingerService } from "./registrars/hostinger.ts";
-import { spaceshipService } from "./registrars/spaceship.ts";
-import { namecheapService } from "./registrars/namecheap.ts";
+import { dynaService } from "./registrars/dynadot.js";
+import { godaddyService } from "./registrars/godaddy.js";
+import { porkbunservice } from "./registrars/porkbun.js";
+import { hostingerService } from "./registrars/hostinger.js";
+import { spaceshipService } from "./registrars/spaceship.js";
+import { namecheapService } from "./registrars/namecheap.js";
+import type { NativeError } from "../types/index.ts";
 
-export const searchService = async(domain) => {
+export const searchService = async(domain: string) => {
     let browser = null
     try {
         const connection = await connect({
-            headless: false,
+            headless: true,
             args: [],
             customConfig: {},
             turnstile: true,
@@ -37,22 +38,22 @@ export const searchService = async(domain) => {
             //     return 'This domain is already taken.'
         // }
         
-        const godaddyPage = await context.newPage()
+        // const godaddyPage = await context.newPage()
         const dynaPage = await context.newPage()
-        const porkbunPage = await context.newPage()
-        const hostingerPage = await context.newPage()
-        const namecheapPage = await context.newPage()
-        const spaceshipPage = await context.newPage()
+        // const porkbunPage = await context.newPage()
+        // const hostingerPage = await context.newPage()
+        // const namecheapPage = await context.newPage()
+        // const spaceshipPage = await context.newPage()
 
         console.log('Parallel scraping started');
 
         const secondaryPromises = await Promise.allSettled([
-            godaddyService(godaddyPage, domain),
+            // godaddyService(godaddyPage, domain),
             dynaService(dynaPage, domain),
-            porkbunservice(porkbunPage, domain),
-            hostingerService(hostingerPage, domain),
-            namecheapService(namecheapPage, domain),
-            spaceshipService(spaceshipPage, domain),
+            // porkbunservice(porkbunPage, domain),
+            // hostingerService(hostingerPage, domain),
+            // namecheapService(namecheapPage, domain),
+            // spaceshipService(spaceshipPage, domain),
         ])
 
         console.log('Promises resolved, returning combined data...');
@@ -68,19 +69,21 @@ export const searchService = async(domain) => {
             ]
         };
     } catch (error) {
-        console.error('🔴 Search service error:', error.message);
+        const err = error as NativeError
+        console.error('🔴 Search service error:', err.message);
         if (browser) {
             try {
                 await browser.close()
                 console.log('🟡 Browser closed after error');
             } catch (closeErr) {
-                console.error('🔴 Failed to close browser:', closeErr.message);
+                const err = closeErr as NativeError
+                console.error('🔴 Failed to close browser:', err.message);
             }
         }
         throw{
             success: false,
-            type: error.name || 'UnknownError',
-            message: error.message || 'Failed to search domain',
+            type: err.name || 'UnknownError',
+            message: err.message || 'Failed to search domain',
         }
     }
 }

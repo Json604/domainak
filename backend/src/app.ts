@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
-import { NODE_ENV, PORT } from "./config/env.ts";
-import { searchRouter } from "./routes/search.route.ts";
+import { NODE_ENV, PORT } from "./config/env.js";
+import { searchRouter } from "./routes/search.route.js";
 import {rateLimit} from "express-rate-limit";
+import type { Request, Response, NextFunction } from "express";
+import type { ServiceError } from "./types/index.ts";
 
 const app = express();
 
@@ -37,7 +39,7 @@ app.use('/', searchRouter)
 app.get("/", (req, res) => res.json({ message: "backend/domainak.store working fine!!" }));
 
 // Express error handler middleware
-app.use((err, req, res, next) => {
+app.use((err: ServiceError, req:Request, res:Response, next:NextFunction) => {
   console.error('🔴 Express error:', err.message);
   res.status(500).json({
     success: false,
