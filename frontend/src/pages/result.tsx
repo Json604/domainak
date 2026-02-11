@@ -8,23 +8,32 @@ import handloader from '../assets/handLoader.json'
 import Lottie from "lottie-react"
 import StatusBadge from '../components/StatusBadge'
 import ResultsList from '../components/ResultsList'
+import type { PromiseResult } from "../types"
+
+interface ApiResponse{
+    success: boolean
+    data:{
+        domain: string
+        result: PromiseResult[]
+    }
+}
 
 export const ResultPage = () => {
     const [searchParams] = useSearchParams()
     const searchDomain = searchParams.get('domain')
-    const [data, setData] = useState('')
+    const [data, setData] = useState<ApiResponse | null>(null)
     // const [loading, setLoading] = useState(false)
     const [loading, setLoading] = useState(true)
     const [domain, setDomain] = useState('')
     const [error, setError] = useState(false)
-    const [fetchError, setFetchError] = useState(null)
+    const [fetchError, setFetchError] = useState<string | null>(null)
     const [retryKey, setRetryKey] = useState(0)
     const nav = useNavigate()
 
     useEffect(() => {
         setLoading(true)
         setFetchError(null)
-        setData('')
+        setData(null)
         fetch(`http://localhost:8000/search?q=${searchDomain}`)
         .then(res => {
             if (!res.ok) throw new Error('Server error')
@@ -112,7 +121,7 @@ export const ResultPage = () => {
             <div className="domainSearched">
                 <div className="searchedUpper">
                     <h2 style={{fontWeight:500}}>Results for <span style={{color: '#f5a623'}}>{searchDomain}</span></h2>
-                    <StatusBadge status={data?.data?.result?.some(r => {
+                    <StatusBadge status={data?.data?.result?.some((r: PromiseResult) => {
                         if (r.status !== 'fulfilled') return false
                         const s = r.value?.status
                         const str = typeof s === 'string' ? s.toLowerCase() : ''

@@ -1,32 +1,41 @@
 import RegistrarLogo from './RegistrarLogo'
 import StatusBadge from './StatusBadge'
 import RegisterButton from './RegisterButton'
+import type { PromiseResult } from '../types'
 
-const RegistrarCard = ({ result, isRecommended = false }) => {
+interface RegistrarCardProps {
+    result: PromiseResult
+    isRecommended?: boolean
+}
+
+const RegistrarCard = ({ result, isRecommended = false }: RegistrarCardProps) => {
     const isFulfilled = result.status === 'fulfilled'
     const data = isFulfilled ? result.value : null
     
     if (!data) {
-        return (
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '1rem 1.5rem',
-                backgroundColor: '#fff',
-                borderBottom: '1px solid #eee',
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <RegistrarLogo registrar={result.reason?.registrar || 'Unknown'} />
-                    <span style={{ fontWeight: 500, fontSize: '1.1rem' }}>
-                        {result.reason?.registrar || 'Unknown'}
-                    </span>
+        if(result.status === 'rejected'){
+            return (
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '1rem 1.5rem',
+                    backgroundColor: '#fff',
+                    borderBottom: '1px solid #eee',
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <RegistrarLogo registrar={result.reason.registrar || 'Unknown'} />
+                        <span style={{ fontWeight: 500, fontSize: '1.1rem' }}>
+                            {result.reason.registrar || 'Unknown'}
+                        </span>
+                    </div>
+                    <StatusBadge status="error" />
+                    <span style={{ color: '#aaa' }}>—</span>
+                    <RegisterButton disabled />
                 </div>
-                <StatusBadge status="error" />
-                <span style={{ color: '#aaa' }}>—</span>
-                <RegisterButton disabled />
-            </div>
-        )
+            )
+        }
+        return null
     }
 
     const statusStr = typeof data.status === 'string' ? data.status.toLowerCase() : ''
@@ -34,7 +43,7 @@ const RegistrarCard = ({ result, isRecommended = false }) => {
     const isAftermarket = statusStr.includes('aftermarket')
     const canRegister = isAvailable || isAftermarket
 
-    const formatPrice = (price) => {
+    const formatPrice = (price: string | number | null) => {
         if (!price || price === '') return '—'
         if (typeof price === 'number') return `₹${price}/year`
         return `${price}/year`

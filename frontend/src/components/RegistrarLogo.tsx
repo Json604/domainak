@@ -4,6 +4,7 @@ import porkbun from '../assets/porkbun/p_logo.svg'
 import dynadot from '../assets/dynadot/d_logo.svg'
 import hostinger from '../assets/hostinger/h_logo.svg'
 import spaceship from '../assets/spaceship/s_logo.svg'
+import type { Registrar } from '../types'
 
 const logos = {
     'Godaddy': godaddy,
@@ -14,7 +15,12 @@ const logos = {
     'Spaceship': spaceship,
 }
 
-const RegistrarLogo = ({ registrar, size = 40 }) => {
+interface RegistrarLogoProps{
+    registrar: Registrar
+    size?: number
+}
+
+const RegistrarLogo = ({ registrar, size = 40 }: RegistrarLogoProps) => {
     const logo = logos[registrar]
     
     if (!logo) return null

@@ -1,4 +1,9 @@
-const StatusBadge = ({ status, size = 'normal' }) => {
+interface StatusBadgeProps{
+    status: string | boolean
+    size?: 'normal' | 'large'
+}
+
+const StatusBadge = ({ status, size = 'normal' }: StatusBadgeProps) => {
     const statusStr = typeof status === 'string' ? status.toLowerCase() : ''
     
     const isAvailable = status === true || statusStr === 'available'

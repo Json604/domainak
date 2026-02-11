@@ -1,4 +1,11 @@
-const RegisterButton = ({ registrar, disabled = false }) => {
+import type {Registrar} from "../types"
+
+interface RegisterButtonProps {
+    registrar?: Registrar
+    disabled?: boolean
+}
+
+const RegisterButton = ({ registrar, disabled = false }: RegisterButtonProps) => {
     // Add affiliate/registration links here later
     const links = {
         'Godaddy': 'https://godaddy.com',
@@ -9,7 +16,7 @@ const RegisterButton = ({ registrar, disabled = false }) => {
         'Spaceship': 'https://spaceship.com',
     }
 
-    if (disabled) {
+    if (disabled || !registrar) {
         return (
             <button style={{
                 padding: '0.5rem 1.25rem',
