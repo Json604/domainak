@@ -1,4 +1,4 @@
-import '../App.css'
+import '../../App.css'
 import { motion } from "motion/react"
 
 const Loader = () => {

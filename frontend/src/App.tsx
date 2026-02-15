@@ -3,7 +3,7 @@ import './App.css'
 import zigzag from './assets/Vector 1.svg'
 import heart from './assets/heart.svg'
 import LogoMarquee from './components/logoMarquee'
-// import Loader from './components/loader'
+import Loader from './components/loader_animations/loader'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { parse } from 'tldts'
@@ -27,7 +27,7 @@ function App() {
 
   return (
     <>
-    {/* <Loader /> */}
+    <Loader />
     <div className='page'>
 
       <div className='box1'>
