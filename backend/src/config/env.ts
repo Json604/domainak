@@ -8,6 +8,5 @@ export const{
     NODE_ENV = 'development',
     NAMECHEAP_URL = 'https://www.namecheap.com/domains/registration/results/',
     DYNADOT_URL = 'https://www.dynadot.com/domain/search',
-    PORKBUN_URL = 'https://porkbun.com/products/domains',
     SPACESHIP_URL = 'https://www.spaceship.com/domain-search/'
 } = process.env
