@@ -51,7 +51,7 @@ Registrars block cloud servers, so the hosted site at [domainak.netlify.app](htt
 git clone https://github.com/Json604/domainak && cd domainak && npm start
 ```
 
-That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Node.js 18+** and **Google Chrome**. Each search opens a real Chrome window for ~15 seconds: that's the scraper at work.
+That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Node.js 18+** and **Google Chrome**. While Domainak runs, a real Chrome sits minimized in your Dock/taskbar: each search happens there in a background window, so nothing pops up or steals focus. The results page shows the search live as each registrar answers.
 
 `npm start -- --no-open` skips opening the browser.
 
@@ -89,6 +89,10 @@ Response:
   ]
 }
 ```
+
+**GET /search/stream?q={domain}**
+
+The same search as Server-Sent Events: `progress` events (`queued`, `stage`, per-registrar `phase` and `result`) as it runs, then `done` with the full result or `failure`. The results page uses this for the live story.
 
 ## Scripts
 

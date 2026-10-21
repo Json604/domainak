@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { NODE_ENV, PORT } from "./config/env.js";
 import { searchRouter } from "./routes/search.route.js";
+import { closeBrowser, getBrowser } from "./services/browser.js";
 import {rateLimit} from "express-rate-limit";
 import type { Request, Response, NextFunction } from "express";
 import type { ServiceError } from "./types/index.ts";
@@ -65,6 +66,23 @@ app.use((err: ServiceError, req:Request, res:Response, next:NextFunction) => {
   });
 });
 
-app.listen(PORT, () => {
+// Close Chrome with the server (it runs detached, so it would outlive us otherwise)
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.on(signal, async () => {
+    await closeBrowser()
+    process.exit(0)
+  })
+}
+
+// Launch Chrome before accepting requests: launching is the one moment it can
+// take focus, so it's over before anyone (or `npm start`) opens the site
+await getBrowser().catch((err) => console.error('🔴 Chrome failed to launch:', err.message))
+
+app.listen(PORT, async (error) => {
+  if (error) {
+    console.error(`🔴 Can't start on port ${PORT}: ${error.message}. Is Domainak already running?`);
+    await closeBrowser()
+    process.exit(1)
+  }
   console.log(`Server running on http://localhost:${PORT} in ${NODE_ENV} mode`);
 });

@@ -4,7 +4,6 @@ import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const porkbunservice = async(porkbunPage: any,domain: string): Promise<RegistrarResponse> => {
     try {
-        await porkbunPage.bringToFront()
         await porkbunPage.goto(PORKBUN_URL)
     
         await porkbunPage.locator('::-p-aria(Domain Search)').fill(domain);
@@ -43,3 +42,4 @@ export const porkbunservice = async(porkbunPage: any,domain: string): Promise<Re
 }    
 
 // ⚠️⚠️ only works when tab in focus ⚠️⚠️ (keep in mind)
+// Focus is emulated in browser.ts, so it works in the minimized window without bringToFront()

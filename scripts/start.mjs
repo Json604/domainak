@@ -35,7 +35,8 @@ npm(frontend, ['run', 'build', '--silent', '--', '--logLevel', 'error'], { VITE_
 npm(backend, ['run', 'build', '--silent'])
 
 step(`Starting Domainak on ${URL_}`)
-console.log('  Each search opens a real Chrome window for ~15s. That is the scraper, let it work.')
+console.log('  A real Chrome runs minimized in your Dock/taskbar while Domainak is open.')
+console.log('  Searches happen there, so nothing pops up or steals focus.')
 console.log('  Press Ctrl+C to stop.\n')
 const server = spawn(process.execPath, ['dist/app.js'], {
     cwd: backend,

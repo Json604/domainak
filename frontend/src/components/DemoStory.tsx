@@ -1,28 +1,29 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import RegistrarLogo from './RegistrarLogo'
+import { Check, HiddenPrice, StoryBrowser, StoryNarration, StorySteps, type StoryTab } from './StoryParts'
+import { EASE_OUT, REGISTRARS, type Phase } from './storyData'
 import { REPO_URL } from '../config'
 import { track } from '../analytics'
 import type { Registrar } from '../types'
-import './demoStory.css'
 
 // Staged replay of what the real backend does. Times are in seconds;
 // `done` is when that registrar's price data "arrives".
-const REGISTRARS: { name: Registrar, label: string, site: string, botCheck?: boolean, done: number }[] = [
-    { name: 'Godaddy', label: 'GoDaddy', site: 'godaddy.com/domainsearch/find?domainToCheck=', botCheck: true, done: 7.4 },
-    { name: 'Namecheap', label: 'Namecheap', site: 'namecheap.com/domains/registration/results/?domain=', done: 3.8 },
-    { name: 'Porkbun', label: 'Porkbun', site: 'porkbun.com/checkout/search?q=', done: 5.8 },
-    { name: 'Dynadot', label: 'Dynadot', site: 'dynadot.com/domain/search?domain=', done: 4.6 },
-    { name: 'Hostinger', label: 'Hostinger', site: 'hostinger.com/domain-name-results?domain=', botCheck: true, done: 6.8 },
-    { name: 'Spaceship', label: 'Spaceship', site: 'spaceship.com/domain-search/?query=', done: 5.2 },
-]
+const TIMELINE: Record<Registrar, { botCheck?: boolean, done: number }> = {
+    Godaddy: { botCheck: true, done: 7.4 },
+    Namecheap: { done: 3.8 },
+    Porkbun: { done: 5.8 },
+    Dynadot: { done: 4.6 },
+    Hostinger: { botCheck: true, done: 6.8 },
+    Spaceship: { done: 5.2 },
+}
 
 const STEPS = [
-    { at: 0, label: 'Launch Chrome', text: 'Opening a real Chrome browser…' },
-    { at: 1.2, label: 'Open registrars', text: 'Visiting all 6 registrars at the same time…' },
-    { at: 2.6, label: 'Bot checks', text: 'Getting past bot checks, just like a normal visitor…' },
-    { at: 3.6, label: 'Read prices', text: 'Catching each registrar’s own price data as the page loads…' },
-    { at: 8.2, label: 'Compare', text: 'Lining up every price to find the cheapest…' },
+    { at: 0, text: 'Opening a real Chrome browser…' },
+    { at: 1.2, text: 'Visiting all 6 registrars at the same time…' },
+    { at: 2.6, text: 'Getting past bot checks, just like a normal visitor…' },
+    { at: 3.6, text: 'Catching each registrar’s own price data as the page loads…' },
+    { at: 8.2, text: 'Lining up every price to find the cheapest…' },
 ]
 const TABS_AT = 1.2
 const BOT_AT = 2.6
@@ -31,39 +32,14 @@ const END_AT = 9.8
 
 const COMMAND = `git clone ${REPO_URL} && cd domainak && npm start`
 
-type Phase = 'hidden' | 'loading' | 'bot' | 'reading' | 'done'
-
-const phaseAt = (r: typeof REGISTRARS[number], i: number, t: number): Phase => {
+const phaseAt = (name: Registrar, i: number, t: number): Phase => {
+    const { botCheck, done } = TIMELINE[name]
     if (t < TABS_AT + i * 0.18) return 'hidden'
-    if (t >= r.done) return 'done'
-    if (t >= r.done - 0.9) return 'reading'
-    if (r.botCheck && t >= BOT_AT) return 'bot'
+    if (t >= done) return 'done'
+    if (t >= done - 0.9) return 'reading'
+    if (botCheck && t >= BOT_AT) return 'bot'
     return 'loading'
 }
-
-const PHASE_PROGRESS: Record<Phase, number> = { hidden: 0, loading: 0.35, bot: 0.55, reading: 0.8, done: 1 }
-
-const Spinner = () => <span className="story-spinner" aria-hidden="true" />
-
-const Shield = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-)
-
-const Check = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M20 6 9 17l-5-5" />
-    </svg>
-)
-
-// Never a made-up number: the demo has no real prices to show
-const HiddenPrice = () => (
-    <span className="story-price">
-        <span className="story-price-blur" aria-hidden="true">$00.00</span>
-        <span className="sr-only">Price hidden in demo</span>
-    </span>
-)
 
 const DemoStory = ({ domain }: { domain: string }) => {
     const reduceMotion = useReducedMotion()
@@ -88,6 +64,11 @@ const DemoStory = ({ domain }: { domain: string }) => {
     const stepIndex = STEPS.reduce((acc, s, i) => (t >= s.at ? i : acc), 0)
     const narration = finished ? 'Done. Here’s the catch…' : STEPS[stepIndex]!.text
 
+    const tabs = Object.fromEntries(REGISTRARS.map((r, i) => {
+        const tab: StoryTab = { phase: phaseAt(r.name, i, t), price: <HiddenPrice /> }
+        return [r.name, tab]
+    })) as Record<Registrar, StoryTab>
+
     async function copyCommand() {
         track('copy_command')
         try {
@@ -111,84 +92,23 @@ const DemoStory = ({ domain }: { domain: string }) => {
                 )}
             </div>
 
-            <ol className="story-steps">
-                {STEPS.map((s, i) => (
-                    <li key={s.label} className={finished || i < stepIndex ? 'is-done' : i === stepIndex ? 'is-active' : ''}>
-                        <span className="story-step-dot" />
-                        {s.label}
-                    </li>
-                ))}
-            </ol>
-
-            <div className="story-narration" aria-live="polite">
-                <AnimatePresence mode="wait" initial={false}>
-                    <motion.p
-                        key={narration}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                    >
-                        {narration}
-                    </motion.p>
-                </AnimatePresence>
-            </div>
+            <StorySteps active={stepIndex} finished={finished} />
+            <StoryNarration text={narration} />
 
             <AnimatePresence mode="wait" initial={false}>
                 {t < COMPARE_AT ? (
-                    <motion.div
+                    <StoryBrowser
                         key="browser"
-                        className="story-browser"
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }}
-                        transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-                    >
-                        <div className="story-browser-bar">
-                            <span className="story-light" />
-                            <span className="story-light" />
-                            <span className="story-light" />
-                            <div className="story-address">
-                                {t < TABS_AT ? 'about:blank' : `Chrome · 6 tabs · ${domain}`}
-                            </div>
-                        </div>
-
-                        <div className="story-grid">
-                            {REGISTRARS.map((r, i) => {
-                                const phase = phaseAt(r, i, t)
-                                return (
-                                    <motion.div
-                                        key={r.name}
-                                        className={`story-tab is-${phase}`}
-                                        initial={false}
-                                        animate={{ opacity: phase === 'hidden' ? 0 : 1, y: phase === 'hidden' ? 10 : 0 }}
-                                        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                                    >
-                                        <div className="story-tab-top">
-                                            <RegistrarLogo registrar={r.name} size={26} />
-                                            <span className="story-tab-name">{r.label}</span>
-                                        </div>
-                                        <div className="story-tab-url">{r.site}{domain}</div>
-                                        <div className="story-tab-status">
-                                            {phase === 'loading' && <><Spinner />Loading page</>}
-                                            {phase === 'bot' && <><Shield />Passing bot check</>}
-                                            {phase === 'reading' && <><Spinner />Reading price data</>}
-                                            {phase === 'done' && <><Check />Price found <HiddenPrice /></>}
-                                        </div>
-                                        <div className="story-tab-progress">
-                                            <span style={{ transform: `scaleX(${PHASE_PROGRESS[phase]})` }} />
-                                        </div>
-                                    </motion.div>
-                                )
-                            })}
-                        </div>
-                    </motion.div>
+                        domain={domain}
+                        address={t < TABS_AT ? 'about:blank' : `Chrome · 6 tabs · ${domain}`}
+                        tabs={tabs}
+                    />
                 ) : (
                     <motion.div
                         key="compare"
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                        transition={{ duration: 0.4, ease: EASE_OUT }}
                     >
                         <div className="story-rec">
                             <div className="story-rec-label">RECOMMENDED — LOWEST PRICE</div>
@@ -237,14 +157,14 @@ const DemoStory = ({ domain }: { domain: string }) => {
                         }}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: reduceMotion ? 0 : 0.15, duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+                        transition={{ delay: reduceMotion ? 0 : 0.15, duration: 0.45, ease: EASE_OUT }}
                     >
                         <p className="story-cta-eyebrow">That was a replay.</p>
                         <h3>Registrars block cloud servers. Your laptop gets through.</h3>
                         <p className="story-cta-copy">
                             GoDaddy and Hostinger turn servers away with bot checks, so the real Domainak runs
-                            on your computer. It opens Chrome, checks all 6 registrars in about 15 seconds,
-                            and shows you the actual prices.
+                            on your computer. It drives a real Chrome quietly in the background, checks all 6
+                            registrars in about 15 seconds, and shows you the actual prices.
                         </p>
 
                         <div className="story-cmd">

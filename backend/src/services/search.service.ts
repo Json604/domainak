@@ -1,19 +1,33 @@
-import { connect } from "puppeteer-real-browser";
 import { dynaService } from "./registrars/dynadot.js";
 import { godaddyService } from "./registrars/godaddy.js";
 import { porkbunservice } from "./registrars/porkbun.js";
 import { hostingerService } from "./registrars/hostinger.js";
 import { spaceshipService } from "./registrars/spaceship.js";
 import { namecheapService } from "./registrars/namecheap.js";
-import type { NativeError } from "../types/index.ts";
+import { closeSearchContext, openSearchPages } from "./browser.js";
+import type { NativeError, SearchEvent } from "../types/index.ts";
 
 // One Chrome at a time is plenty for a single machine: searches queue
 // up behind each other and recent results are reused.
 const CACHE_TTL_MS = 10 * 60 * 1000
 const cache = new Map<string, { at: number, data: Awaited<ReturnType<typeof scrape>> }>()
 let queue: Promise<unknown> = Promise.resolve()
+let inFlight = 0
 
-export const searchService = async(domain: string) => {
+const REGISTRARS = [
+    ['Godaddy', godaddyService],
+    ['Dynadot', dynaService],
+    ['Porkbun', porkbunservice],
+    ['Hostinger', hostingerService],
+    ['Namecheap', namecheapService],
+    ['Spaceship', spaceshipService],
+] as const
+
+// Page titles of the bot walls (Cloudflare, Akamai, PerimeterX)
+const BOT_CHECK_TITLE = /just a moment|attention required|access denied|access to this page has been denied|security check/i
+
+// `onEvent` streams progress for the live story on the results page
+export const searchService = async(domain: string, onEvent: (event: SearchEvent) => void = () => {}) => {
     const key = domain.toLowerCase()
     const cached = cache.get(key)
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
@@ -21,9 +35,11 @@ export const searchService = async(domain: string) => {
         return cached.data
     }
 
-    const run = queue.then(() => scrape(domain))
+    if (inFlight > 0) onEvent({ type: 'queued' })
+    inFlight++
+    const run = queue.then(() => scrape(domain, onEvent))
     queue = run.catch(() => {})
-    const data = await run
+    const data = await run.finally(() => { inFlight-- })
 
     for (const [k, v] of cache) {
         if (Date.now() - v.at >= CACHE_TTL_MS) cache.delete(k)
@@ -34,26 +50,13 @@ export const searchService = async(domain: string) => {
     return data
 }
 
-const scrape = async(domain: string) => {
-    let browser = null
+const scrape = async(domain: string, onEvent: (event: SearchEvent) => void) => {
+    let context = null
     try {
-        const connection = await connect({
-            headless: false,
-            args: [],
-            customConfig: {},
-            turnstile: true,
-            connectOption: {},
-            disableXvfb: false,
-            ignoreAllFlags: false,
-            // proxy:{
-            //     host:'<proxy-host>',
-            //     port:'<proxy-port>',
-            //     username:'<proxy-username>',
-            //     password:'<proxy-password>'
-            // }
-        });
-        browser = connection.browser
-        const context = await browser.createBrowserContext()
+        onEvent({ type: 'stage', stage: 'launch' })
+        const opened = await openSearchPages(REGISTRARS.length)
+        context = opened.context
+        onEvent({ type: 'stage', stage: 'open' })
 
         // console.log('Beginning Primary availability check');
         
@@ -64,29 +67,32 @@ const scrape = async(domain: string) => {
         // if((primaryCheck[0]?.value?.status.toLowerCase() === 'taken')){
             //     return 'This domain is already taken.'
         // }
-        
-        const godaddyPage = await context.newPage()
-        const dynaPage = await context.newPage()
-        const porkbunPage = await context.newPage()
-        const hostingerPage = await context.newPage()
-        const namecheapPage = await context.newPage()
-        const spaceshipPage = await context.newPage()
 
         console.log('Parallel scraping started');
 
-        const secondaryPromises = await Promise.allSettled([
-            godaddyService(godaddyPage, domain),
-            dynaService(dynaPage, domain),
-            porkbunservice(porkbunPage, domain),
-            hostingerService(hostingerPage, domain),
-            namecheapService(namecheapPage, domain),
-            spaceshipService(spaceshipPage, domain),
-        ])
+        const secondaryPromises = await Promise.allSettled(REGISTRARS.map(async ([registrar, service], i) => {
+            const page = opened.pages[i]!
+            let settled = false
+            onEvent({ type: 'phase', registrar, phase: 'loading' })
+            page.on('domcontentloaded', async () => {
+                const title = await page.title().catch(() => '')
+                if (!settled) onEvent({ type: 'phase', registrar, phase: BOT_CHECK_TITLE.test(title) ? 'bot' : 'reading' })
+            })
+
+            const result = await service(page, domain).then(
+                (value) => ({ status: 'fulfilled', value }) as const,
+                (reason) => ({ status: 'rejected', reason }) as const,
+            )
+            settled = true
+            onEvent({ type: 'result', result })
+            if (result.status === 'rejected') throw result.reason
+            return result.value
+        }))
 
         console.log('Promises resolved, returning combined data...');
 
-        await browser.close()
-        console.log('🟢 Browser closed successfully');
+        await closeSearchContext(context)
+        console.log('🟢 Search window closed');
 
         return{
             domain,
@@ -98,15 +104,7 @@ const scrape = async(domain: string) => {
     } catch (error) {
         const err = error as NativeError
         console.error('🔴 Search service error:', err.message);
-        if (browser) {
-            try {
-                await browser.close()
-                console.log('🟡 Browser closed after error');
-            } catch (closeErr) {
-                const err = closeErr as NativeError
-                console.error('🔴 Failed to close browser:', err.message);
-            }
-        }
+        await closeSearchContext(context)
         throw{
             success: false,
             type: err.name || 'UnknownError',

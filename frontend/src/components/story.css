@@ -441,3 +441,49 @@
 @media (prefers-reduced-motion: reduce){
     .story-spinner{ animation: none; }
 }
+
+/* Live mode */
+.story-live-pill{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    background: #e6f6e6;
+    color: #2d8a2d;
+}
+
+.story-live-dot{
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #2d8a2d;
+    animation: story-pulse 1.4s ease-in-out infinite;
+}
+@keyframes story-pulse{ 50% { opacity: 0.3; } }
+
+.story-elapsed{
+    margin-left: auto;
+    color: #999;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.story-price-real{
+    margin-left: auto;
+    font-weight: 600;
+    color: #111;
+}
+
+.story-tab.is-taken .story-tab-status{ color: #999; }
+.story-tab.is-taken .story-tab-progress span{ background: #ccc; }
+.story-tab.is-failed{ border-color: #f6dcc4; }
+.story-tab.is-failed .story-tab-status{ color: #e67e22; }
+.story-tab.is-failed .story-tab-progress span{ background: #e67e22; }
+
+@media (prefers-reduced-motion: reduce){
+    .story-live-dot{ animation: none; }
+}

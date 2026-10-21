@@ -1,24 +1,21 @@
-import { useState, useEffect,  } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
+import { motion } from "motion/react"
 import { parse } from 'tldts'
 import zigzag from '../assets/Vector 1.svg'
 import './result.css'
-import handloader from '../assets/handLoader.json'
-import Lottie from "lottie-react"
 import StatusBadge from '../components/StatusBadge'
 import ResultsList from '../components/ResultsList'
 import SocialLinks from '../components/SocialLinks'
 import { track } from '../analytics'
 import DemoStory from '../components/DemoStory'
-import { API_URL, IS_DEMO } from '../config'
+import LiveStory, { type SearchData } from '../components/LiveStory'
+import { IS_DEMO } from '../config'
 import type { PromiseResult } from "../types"
 
 interface ApiResponse{
     success: boolean
-    data:{
-        domain: string
-        result: PromiseResult[]
-    }
+    data: SearchData
 }
 
 export const ResultPage = () => {
@@ -33,30 +30,24 @@ export const ResultPage = () => {
     const [retryKey, setRetryKey] = useState(0)
     const nav = useNavigate()
 
+    // Each new search (or retry) goes back to the live story, which runs the search
     useEffect(() => {
         if (IS_DEMO) return
         setLoading(true)
         setFetchError(null)
         setData(null)
-        fetch(`${API_URL}/search?q=${encodeURIComponent(searchDomain ?? '')}`)
-        .then(res => {
-            if (!res.ok) throw new Error('Server error')
-            return res.json()
-        })
-        .then(data => {
-            if (!data.success) {
-                setFetchError(data.message || 'Something went wrong')
-            } else {
-                setData(data)
-            }
-            setLoading(false)
-        })
-        .catch((err) => {
-            console.error('🔴 Fetch error:', err)
-            setFetchError('Could not connect to server. Please try again.')
-            setLoading(false)
-        })
     },[searchDomain, retryKey])
+
+    const handleDone = useCallback((result: SearchData) => {
+        setData({ success: true, data: result })
+        setLoading(false)
+    }, [])
+
+    const handleError = useCallback((message: string) => {
+        console.error('🔴 Search error:', message)
+        setFetchError(message)
+        setLoading(false)
+    }, [])
 
     function handleSearch(){
         const parsed = parse(domain.trim())
@@ -97,7 +88,7 @@ export const ResultPage = () => {
 
         <div className="results-main">
             {IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
-            : loading ? (<Lottie className="loading-animation" animationData={handloader}/>)
+            : loading ? (<LiveStory key={`${searchDomain}-${retryKey}`} domain={searchDomain ?? ''} onDone={handleDone} onError={handleError} />)
             : fetchError ? (
             <div className="error-state">
                 <h2 style={{fontWeight:500, color: '#d14343'}}>Oops!</h2>
@@ -120,7 +111,7 @@ export const ResultPage = () => {
             </div>
             )
             :(
-            <>
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}>
             <div className="domainSearched">
                 <div className="searchedUpper">
                     <h2 style={{fontWeight:500}}>Results for <span style={{color: '#f5a623'}}>{searchDomain}</span></h2>
@@ -136,7 +127,7 @@ export const ResultPage = () => {
             </div>
             
             <ResultsList results={data?.data?.result} />
-            </>
+            </motion.div>
             )}
         </div>
 
