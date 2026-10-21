@@ -10,13 +10,13 @@ export const namecheapService = async (namecheapPage: any, domain: string): Prom
         const tld = parse(domain, {allowPrivateDomains: true}).publicSuffix
     
         const ReqPromises = [
-            namecheapPage.waitForResponse((res: any) => res.url().includes("/domains/tlds.ashx")),
-            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://rtb.namecheap.com/api/domains?")),
-            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://domain-search.namecheap.com/v1/domainStatus?"))
+            namecheapPage.waitForResponse((res: any) => res.ok() && res.url().includes("/domains/tlds.ashx")),
+            namecheapPage.waitForResponse((res: any) => res.ok() && res.url().startsWith("https://rtb.namecheap.com/api/domains?")),
+            namecheapPage.waitForResponse((res: any) => res.ok() && res.url().startsWith("https://domain-search.namecheap.com/v1/domainStatus?"))
         ]
         console.log(`🟠 Namecheap net req promise started`);
     
-        await namecheapPage.goto(`${NAMECHEAP_URL}?domain=${domain}`)
+        await namecheapPage.goto(`${NAMECHEAP_URL}?domain=${encodeURIComponent(domain)}`)
     
         const responsePromise = await Promise.all(ReqPromises)
         console.log(`🟠 Namecheap net Req Promise resolved`);

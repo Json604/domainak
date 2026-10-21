@@ -6,10 +6,16 @@ const CurrencyPicker = () => {
     const { currency, setCurrency, rates } = usePricing()
 
     const options = useMemo(() => {
-        const names = new Intl.DisplayNames(undefined, { type: 'currency' })
+        let name = (code: string) => code
+        try {
+            const names = new Intl.DisplayNames(undefined, { type: 'currency' })
+            name = (code) => names.of(code) ?? code
+        } catch {
+            // Older browsers: codes alone
+        }
         const codes = PICKER_CURRENCIES.filter((code) => !rates || rates[code])
         if (!codes.includes(currency)) codes.unshift(currency)
-        return codes.map((code) => ({ code, label: `${code} · ${names.of(code) ?? code}` }))
+        return codes.map((code) => ({ code, label: `${code} · ${name(code)}` }))
     }, [rates, currency])
 
     return (

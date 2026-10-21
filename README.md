@@ -51,15 +51,17 @@ Registrars block cloud servers, so the hosted site at [domainak.netlify.app](htt
 git clone https://github.com/Json604/domainak && cd domainak && npm start
 ```
 
-On Windows PowerShell, use `;` instead of `&&`:
+On Windows PowerShell (which doesn't take `&&`, and blocks `npm.ps1` by default):
 
 ```powershell
-git clone https://github.com/Json604/domainak; cd domainak; npm start
+git clone https://github.com/Json604/domainak; cd domainak; npm.cmd start
 ```
 
-That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Git**, **Node.js 18+** and **Google Chrome**. While Domainak runs, a real Chrome sits minimized in your Dock/taskbar: each search happens there in a background window, so nothing pops up or steals focus. The results page shows the search live as each registrar answers.
+Next time, just run `npm start` (PowerShell: `npm.cmd start`) inside the `domainak` folder. Run `git pull` first to get updates; new dependencies are installed automatically.
 
-`npm start -- --no-open` skips opening the browser.
+That installs everything (on the first run, and again after updates), builds, starts the app and opens `http://localhost:8000`. You need **Git**, **Node.js 20.19+ or 22.12+** and **Google Chrome**. On Linux without a desktop, also install `xvfb` (`sudo apt install xvfb`) so Chrome has a virtual screen. While Domainak runs, a real Chrome sits minimized in your Dock/taskbar: each search happens there in a background window, so nothing pops up or steals focus. The results page shows the search live as each registrar answers.
+
+`npm start -- --no-open` skips opening the browser. Port 8000 taken? `PORT=8001 npm start` (PowerShell: `$env:PORT=8001; npm.cmd start`). The server only listens on this machine, and Google Analytics is only on the hosted demo: your searches stay on your computer.
 
 ## Development
 

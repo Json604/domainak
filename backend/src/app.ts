@@ -5,7 +5,6 @@ import { fileURLToPath } from "node:url";
 import { NODE_ENV, PORT } from "./config/env.js";
 import { searchRouter } from "./routes/search.route.js";
 import { closeBrowser, getBrowser } from "./services/browser.js";
-import {rateLimit} from "express-rate-limit";
 import type { Request, Response, NextFunction } from "express";
 import type { ServiceError } from "./types/index.ts";
 
@@ -20,33 +19,21 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🔴 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Behind Caddy in production: use the real client IP for rate limiting
-app.set('trust proxy', 1);
-
+// Only the local dev frontend calls across origins (`npm start` serves the app
+// from this same server). No websites: this server drives a real Chrome.
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://domainak.store',
-    'https://www.domainak.store',
-    'https://domainak.netlify.app',
-  ],
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
 
-const limiter = rateLimit({
-	windowMs: 60 * 1000, // 1 minute
-	limit: 15, // Limit each IP to 15 requests per `window` (here, per 1 minute).
-	standardHeaders: 'draft-8', // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-	ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
-	// store: ... , // Redis, Memcached, etc. See below.
-})
-
-app.use('/search', limiter)
+// No rate limit: the server only listens on this machine, so every request is
+// the person using it, and a limit would only break their searches
 app.use(express.json());
 
 app.use('/', searchRouter)
+
+// Lets `npm start` tell this server apart from anything else on the port
+app.get('/health', (req, res) => res.json({ app: 'domainak' }))
 
 // Local one-command mode (`npm start` at the repo root): serve the built frontend too
 const frontendDist = fileURLToPath(new URL('../../frontend/dist/', import.meta.url));
@@ -67,8 +54,12 @@ app.use((err: ServiceError, req:Request, res:Response, next:NextFunction) => {
 });
 
 // Close Chrome with the server (it runs detached, so it would outlive us otherwise)
-for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+// Ctrl+C, a closed terminal window (SIGHUP) and Ctrl+Break on Windows all count
+let closing = false
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP', 'SIGBREAK'] as const) {
   process.on(signal, async () => {
+    if (closing) return
+    closing = true
     await closeBrowser()
     process.exit(0)
   })
@@ -78,11 +69,19 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
 // take focus, so it's over before anyone (or `npm start`) opens the site
 await getBrowser().catch((err) => console.error('🔴 Chrome failed to launch:', err.message))
 
-app.listen(PORT, async (error) => {
+// Loopback only: this server drives a real Chrome, so nobody else on the network
+// should reach it (also avoids the macOS "accept incoming connections?" prompt).
+// Both IPv4 and IPv6 loopback, so "localhost" reaches us whichever it resolves to.
+const listen = (host: string, required: boolean) => app.listen(Number(PORT), host, async (error) => {
   if (error) {
-    console.error(`🔴 Can't start on port ${PORT}: ${error.message}. Is Domainak already running?`);
+    // No IPv6 on this machine: IPv4 is enough
+    if (!required && (error as NodeJS.ErrnoException).code !== 'EADDRINUSE') return
+    console.error(`🔴 Can't start on port ${PORT}: ${error.message}.`);
+    console.error(`   Is Domainak already running? Otherwise pick another port: PORT=8001 npm start (PowerShell: $env:PORT=8001; npm.cmd start)`);
     await closeBrowser()
     process.exit(1)
   }
-  console.log(`Server running on http://localhost:${PORT} in ${NODE_ENV} mode`);
+  if (required) console.log(`Server running on http://localhost:${PORT} in ${NODE_ENV} mode`);
 });
+listen('127.0.0.1', true)
+listen('::1', false)

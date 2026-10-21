@@ -23,8 +23,13 @@ const SearchResults = ({ domain, saved, onCheckAgain }: SearchResultsProps) => {
     const [attempt, setAttempt] = useState(0)
 
     const handleDone = useCallback((result: SearchData) => {
-        saveToHistory(result.domain, result.result)
-        setData(result)
+        // Every registrar failed (offline, blocked...): say so, rather than listing six errors under "Unavailable"
+        if (result.result.every((r) => r.status === 'rejected')) {
+            setFetchError('Couldn’t reach any of the registrars. Check your internet connection and try again.')
+        } else {
+            saveToHistory(result.domain, result.result)
+            setData(result)
+        }
         setLoading(false)
     }, [])
 
@@ -62,17 +67,23 @@ const SearchResults = ({ domain, saved, onCheckAgain }: SearchResultsProps) => {
         )
     }
 
+    const anyAvailable = !!data?.result.some((r: PromiseResult) => {
+        if (r.status !== 'fulfilled') return false
+        const s = r.value?.status
+        const str = typeof s === 'string' ? s.toLowerCase() : ''
+        return s === true || str === 'available' || str.includes('aftermarket')
+    })
+    const failed = data?.result.filter((r) => r.status === 'rejected').length ?? 0
+
     return (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}>
             <div className="domainSearched">
                 <div className="searchedUpper">
                     <h2 style={{fontWeight:500}}>Results for <span style={{color: '#f5a623'}}>{domain}</span></h2>
-                    <StatusBadge status={data?.result?.some((r: PromiseResult) => {
-                        if (r.status !== 'fulfilled') return false
-                        const s = r.value?.status
-                        const str = typeof s === 'string' ? s.toLowerCase() : ''
-                        return s === true || str === 'available' || str.includes('aftermarket')
-                    }) ? 'available' : 'unavailable'} size="large" />
+                    {anyAvailable ? <StatusBadge status="available" size="large" />
+                        // Only "Unavailable" when every registrar actually answered
+                        : failed > 0 ? <span className="partial-badge">Couldn’t check {failed} of {data?.result.length}</span>
+                        : <StatusBadge status="unavailable" size="large" />}
                 </div>
 
                 {savedEntry && (

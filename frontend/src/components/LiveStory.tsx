@@ -118,6 +118,7 @@ const LiveStory = ({ domain, onDone, onError }: LiveStoryProps) => {
     const pending = REGISTRARS.filter((r) => !results[r.name]).map((r) => phases[r.name])
     const answered = REGISTRARS.length - pending.length
     const bots = pending.filter((p) => p === 'bot').length
+    const failed = REGISTRARS.filter((r) => results[r.name]?.status === 'rejected').length
     const opened = stage === 'open'
 
     const step = complete ? 4
@@ -126,11 +127,12 @@ const LiveStory = ({ domain, onDone, onError }: LiveStoryProps) => {
         : opened ? 1
         : 0
 
-    const narration = complete ? 'All 6 answered. Lining up the prices…'
+    const narration = complete
+        ? (failed ? `${6 - failed} of 6 answered, ${failed} couldn’t be reached. Lining up the prices…` : 'All 6 answered. Lining up the prices…')
         : stage === 'connecting' ? 'Starting the search…'
         : stage === 'queued' ? 'Another search is running. You’re next…'
         : stage === 'launch' ? 'Opening a minimized Chrome window. It won’t pop up…'
-        : answered > 0 ? `${answered} of 6 registrars answered${bots === 1 ? ', one is still behind a bot check…' : bots > 1 ? `, ${bots} are still behind bot checks…` : '…'}`
+        : answered > 0 ? `${answered} of 6 registrars checked${bots === 1 ? ', one is still behind a bot check…' : bots > 1 ? `, ${bots} are still behind bot checks…` : '…'}`
         : bots > 0 ? 'Getting past bot checks, just like a normal visitor…'
         : pending.includes('reading') ? 'Catching each registrar’s own price data as the page loads…'
         : 'Visiting all 6 registrars at the same time…'

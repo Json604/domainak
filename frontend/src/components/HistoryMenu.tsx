@@ -64,12 +64,13 @@ const HistoryMenu = () => {
                         <ul>
                             {entries.map((e) => {
                                 const available = availableCount(e)
+                                const allAnswered = e.result.every((r) => r.status === 'fulfilled')
                                 return (
                                     <li key={e.domain}>
                                         <button onClick={() => openEntry(e.domain)}>
                                             <span className="history-domain">{e.domain}</span>
                                             <span className="history-meta">
-                                                {available > 0 ? `Available at ${available} of ${e.result.length}` : 'Taken everywhere'} · {timeAgo(e.at)}
+                                                {available > 0 ? `Available at ${available} of ${e.result.length}` : allAnswered ? 'Taken everywhere' : 'Not available where checked'} · {timeAgo(e.at)}
                                             </span>
                                         </button>
                                     </li>

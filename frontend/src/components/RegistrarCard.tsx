@@ -99,7 +99,7 @@ const RegistrarCard = ({ result, domain, isRecommended = false }: RegistrarCardP
                         <span style={{ fontWeight: 600 }}>
                             <Price view={price} size="1.5rem" />
                         </span>
-                        <RegisterButton registrar={data.registrar} domain={domain} />
+                        <RegisterButton registrar={data.registrar} domain={domain} url={data.url} />
                     </div>
                 </div>
             </div>
@@ -129,7 +129,7 @@ const RegistrarCard = ({ result, domain, isRecommended = false }: RegistrarCardP
             }}>
                 {canRegister ? <Price view={price} size="1rem" /> : '—'}
             </span>
-            <RegisterButton registrar={data.registrar} domain={domain} disabled={!canRegister} />
+            <RegisterButton registrar={data.registrar} domain={domain} url={data.url} disabled={!canRegister} />
         </div>
     )
 }

@@ -5,7 +5,7 @@ import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const spaceshipService = async (spaceshipPage: any, domain: string):Promise<RegistrarResponse> => {
     try {
-        await spaceshipPage.goto(`${SPACESHIP_URL}?query=${domain}&tab=domains`)
+        await spaceshipPage.goto(`${SPACESHIP_URL}?query=${encodeURIComponent(domain)}&tab=domains`)
         console.log('🟤 Entered spaceship page');
     
         await Promise.race([

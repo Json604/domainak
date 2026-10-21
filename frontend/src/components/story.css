@@ -487,3 +487,11 @@
 @media (prefers-reduced-motion: reduce){
     .story-live-dot{ animation: none; }
 }
+
+.story-cta-note code{
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    background: #262626;
+    color: #f2f2f2;
+    font-size: 0.8rem;
+}

@@ -4,6 +4,8 @@ import { track } from "../analytics"
 interface RegisterButtonProps {
     registrar?: Registrar
     domain?: string
+    // The registrar's own page for this domain in the market we priced, when it gave one
+    url?: string | undefined
     disabled?: boolean
 }
 
@@ -18,7 +20,7 @@ const searchUrls: Record<Registrar, (domain: string) => string> = {
     'Spaceship': (d) => `https://www.spaceship.com/domain-search/?query=${d}&tab=domains`,
 }
 
-const RegisterButton = ({ registrar, domain = '', disabled = false }: RegisterButtonProps) => {
+const RegisterButton = ({ registrar, domain = '', url, disabled = false }: RegisterButtonProps) => {
     if (disabled || !registrar) {
         return (
             <button style={{
@@ -37,7 +39,7 @@ const RegisterButton = ({ registrar, domain = '', disabled = false }: RegisterBu
 
     return (
         <a 
-            href={searchUrls[registrar](encodeURIComponent(domain))}
+            href={url ?? searchUrls[registrar](encodeURIComponent(domain))}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track('register_click', { registrar, domain })}

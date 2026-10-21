@@ -8,7 +8,8 @@ let cached: { at: number, data: { base: 'USD', rates: Record<string, number>, up
 export const ratesService = async () => {
     if (cached && Date.now() - cached.at < TTL_MS) return cached.data
 
-    const res = await fetch(RATES_URL)
+    // Don't let a slow rates host hold up the results page
+    const res = await fetch(RATES_URL, { signal: AbortSignal.timeout(5000) })
     const json = await res.json() as { result: string, rates: Record<string, number>, time_last_update_utc: string }
     if (json.result !== 'success') throw new Error('Exchange rates unavailable')
 

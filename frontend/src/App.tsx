@@ -8,7 +8,7 @@ import HistoryMenu from './components/HistoryMenu'
 import { track } from './analytics'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { parse } from 'tldts'
+import { normalizeDomain } from './domain'
 
 function App() {
   const [domain, setDomain] = useState('')
@@ -16,16 +16,15 @@ function App() {
   const nav = useNavigate()
 
   function handleSearch(){
-    const parsed = parse(domain.trim())
-    if (!domain.trim() || !parsed.domain || !parsed.publicSuffix) {
+    const normalized = normalizeDomain(domain)
+    if (!normalized) {
       setError(true)
       return
     }
 
     setError(false)
-    track('search', { search_term: domain.trim(), from: 'home' })
-    const encodedDomain = encodeURIComponent(domain.trim())
-    nav(`/results?domain=${encodedDomain}`)
+    track('search', { search_term: normalized, from: 'home' })
+    nav(`/results?domain=${encodeURIComponent(normalized)}`)
   }
 
   return (

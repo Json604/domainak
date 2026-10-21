@@ -1,14 +1,14 @@
 // ✅ ✅ !!!!!!!!!!!!!!!!!!!(WORKS HEADLESS)
 import { DYNADOT_URL } from "../../config/env.js";
-import { NO_PRICE } from "../price.js";
+import { NO_PRICE, parseAmount } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const dynaService = async (dynaPage: any, domain: string): Promise<RegistrarResponse> => {
     try {
-        const responsePromise = dynaPage.waitForResponse((res: any) => res.url().startsWith("https://www.dynadot.com/dynadot-vue-api/dynadot-service/domain-search-api?command=search_result"),{ timeout: 20000 });
+        const responsePromise = dynaPage.waitForResponse((res: any) => res.ok() && res.url().startsWith("https://www.dynadot.com/dynadot-vue-api/dynadot-service/domain-search-api?command=search_result"),{ timeout: 20000 });
         console.log('🔵 Dynadot network req promise started');
     
-        await dynaPage.goto(`${DYNADOT_URL}?domain=${domain}`);
+        await dynaPage.goto(`${DYNADOT_URL}?domain=${encodeURIComponent(domain)}`);
         console.log('🔵 Dyndaot URL set');
     
         const response = await responsePromise
@@ -23,8 +23,9 @@ export const dynaService = async (dynaPage: any, domain: string): Promise<Regist
         console.log("🔵 DynaRes Filtered");
 
         if(exactMatch){
-            const amount = parseFloat(exactMatch.priceNoSymbol)
-            const priced = Number.isFinite(amount) && exactMatch.currency
+            // "1,299.00" for premium names: parseFloat alone would read 1
+            const amount = parseAmount(exactMatch.priceNoSymbol)
+            const priced = amount !== null && exactMatch.currency
             return {
             registrar: 'Dynadot',
             status: exactMatch.status,

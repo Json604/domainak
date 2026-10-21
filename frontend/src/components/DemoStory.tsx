@@ -30,10 +30,11 @@ const BOT_AT = 2.6
 const COMPARE_AT = 8.2
 const END_AT = 9.8
 
-// Windows PowerShell 5.1 (the Windows default) doesn't understand `&&`
+// Windows PowerShell 5.1 (the Windows default) doesn't understand `&&`, and its default
+// script policy blocks npm.ps1, so call npm.cmd
 const ON_WINDOWS = /Windows/i.test(navigator.userAgent)
 const COMMAND = ON_WINDOWS
-    ? `git clone ${REPO_URL}; cd domainak; npm start`
+    ? `git clone ${REPO_URL}; cd domainak; npm.cmd start`
     : `git clone ${REPO_URL} && cd domainak && npm start`
 
 const phaseAt = (name: Registrar, i: number, t: number): Phase => {
@@ -177,7 +178,7 @@ const DemoStory = ({ domain }: { domain: string }) => {
                         </div>
                         <p className="story-cta-note">
                             Paste it into a terminal{ON_WINDOWS ? ' (PowerShell)' : ''}. You need <a href="https://git-scm.com" target="_blank" rel="noopener noreferrer">Git</a>,{' '}
-                            <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node 18+</a> and Google Chrome. It opens at localhost:8000 by itself.
+                            <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node.js 20.19+ or 22.12+</a> and Google Chrome. It opens at localhost:8000 by itself. Next time, just run <code>{ON_WINDOWS ? 'npm.cmd start' : 'npm start'}</code> in the domainak folder.
                         </p>
 
                         <div className="story-cta-actions">

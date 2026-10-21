@@ -17,6 +17,8 @@ export interface RegistrarResponse {
     // Machine-readable version of `price`, for converting between currencies
     amount: number | null
     currency: string | null
+    // The registrar's page for this domain, when it differs by country
+    url?: string
 }
 // Progress streamed to the results page while a search runs
 export type SearchEvent =

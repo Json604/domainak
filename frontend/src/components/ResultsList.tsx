@@ -44,8 +44,16 @@ const ResultsList = ({ results, domain }: ResultsListProps) => {
     // Get unavailable/failed results
     const otherResults = results.filter((r:PromiseResult) => !isPurchasable(r))
 
-    const recommended = availableResults[0]
-    const restAvailable = availableResults.slice(1)
+    // Only call something the lowest price when we know its price, and can compare
+    // it: without exchange rates, ₹ and $ prices can't be ranked against each other
+    const currencies = new Set(availableResults.flatMap((r) => {
+        if (r.status !== 'fulfilled' || r.value.price === null || r.value.price === '') return []
+        return [r.value.currency ?? '?']
+    }))
+    const comparable = rates !== null || currencies.size <= 1
+    const cheapest = availableResults[0]
+    const recommended = comparable && cheapest?.status === 'fulfilled' && Number.isFinite(sortValue(cheapest.value)) ? cheapest : undefined
+    const restAvailable = recommended ? availableResults.slice(1) : availableResults
 
     return (
         <div>

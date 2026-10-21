@@ -1,6 +1,7 @@
 // ✅ ✅ (DOES NOT WORK IN HEADLESS)
 import { PORKBUN_URL } from "../../config/env.js";
 import { NO_PRICE } from "../price.js";
+import { sameDomain } from "../domain.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const porkbunservice = async(porkbunPage: any,domain: string): Promise<RegistrarResponse> => {
@@ -11,13 +12,13 @@ export const porkbunservice = async(porkbunPage: any,domain: string): Promise<Re
         await porkbunPage.locator('::-p-aria(submit search)').click();
         console.log('🟢 Porkbun domain entered and searched');
         
-        const response = await porkbunPage.waitForResponse((res: any) =>res.url().includes('/api/domains/getChecks'),{ timeout: 30000 });
+        const response = await porkbunPage.waitForResponse((res: any) =>res.ok() && res.url().includes('/api/domains/getChecks'),{ timeout: 30000 });
         console.log('🟢 Porkbun req found');
     
         const raw = await response.json();
         console.log('🟢 Porkbun raw data found');
     
-        const exactMatch = raw.results.find((item: any) => item.domain === `${domain}`);
+        const exactMatch = raw.results.find((item: any) => sameDomain(item.domain, domain));
 
         if(exactMatch && exactMatch.result === 'AVAILABLE'){
             return{

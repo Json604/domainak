@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { parse } from 'tldts'
+import { normalizeDomain } from '../domain'
 import zigzag from '../assets/Vector 1.svg'
 import './result.css'
 import SocialLinks from '../components/SocialLinks'
@@ -13,7 +13,8 @@ import { IS_DEMO } from '../config'
 
 export const ResultPage = () => {
     const [searchParams] = useSearchParams()
-    const searchDomain = searchParams.get('domain')
+    // Cleaned the same way as the search box, in case the URL was typed or pasted
+    const searchDomain = normalizeDomain(searchParams.get('domain'))
     const saved = searchParams.get('saved') === '1'
     const [domain, setDomain] = useState('')
     const [error, setError] = useState(false)
@@ -21,21 +22,20 @@ export const ResultPage = () => {
     const nav = useNavigate()
 
     function handleSearch(){
-        const parsed = parse(domain.trim())
-        if (!domain.trim() || !parsed.domain || !parsed.publicSuffix) {
+        const normalized = normalizeDomain(domain)
+        if (!normalized) {
             setError(true)
             return
         }
 
         setError(false)
-        track('search', { search_term: domain.trim(), from: 'results' })
-        const encodedDomain = encodeURIComponent(domain.trim())
+        track('search', { search_term: normalized, from: 'results' })
 
         // If same domain, trigger retry (live, even if it was opened from history). Otherwise navigate.
-        if (encodedDomain === searchDomain) {
+        if (normalized === searchDomain) {
             setRetryKey(prev => prev + 1)
         }
-        nav(`/results?domain=${encodedDomain}`)
+        nav(`/results?domain=${encodeURIComponent(normalized)}`)
     }
 
     return(
@@ -60,12 +60,18 @@ export const ResultPage = () => {
         <div className="results-main">
             <PricingProvider>
             {IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
-            : (<SearchResults
+            : searchDomain ? (<SearchResults
                 key={`${searchDomain}-${retryKey}-${saved}`}
-                domain={searchDomain ?? ''}
+                domain={searchDomain}
                 saved={saved}
-                onCheckAgain={() => nav(`/results?domain=${encodeURIComponent(searchDomain ?? '')}`)}
-            />)}
+                onCheckAgain={() => nav(`/results?domain=${encodeURIComponent(searchDomain)}`)}
+            />)
+            : (
+            <div className="error-state">
+                <h2 style={{fontWeight:500}}>That doesn’t look like a domain</h2>
+                <p style={{color: '#666', fontSize: '1.1rem'}}>Search for a full domain name, like example.com.</p>
+            </div>
+            )}
             </PricingProvider>
         </div>
 

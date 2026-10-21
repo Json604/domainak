@@ -10,9 +10,23 @@ import type { NativeError, RegistrarResponse, SearchEvent } from "../types/index
 // One Chrome at a time is plenty for a single machine: searches queue
 // up behind each other and recent results are reused.
 const CACHE_TTL_MS = 10 * 60 * 1000
-const cache = new Map<string, { at: number, data: Awaited<ReturnType<typeof scrape>> }>()
+const cache = new Map<string, { at: number, data: SearchData }>()
 let queue: Promise<unknown> = Promise.resolve()
-let inFlight = 0
+
+type SearchData = Awaited<ReturnType<typeof scrape>>
+type Listener = (event: SearchEvent) => void
+
+// One running search per domain+country. Asking again (another tab, a double
+// click) joins it instead of scraping twice; when everyone watching has left
+// (e.g. they fixed a typo and searched again), it's cancelled so the next
+// search doesn't wait behind it.
+interface Job {
+    listeners: Set<Listener>
+    events: SearchEvent[]
+    abort: AbortController
+    promise: Promise<SearchData>
+}
+const jobs = new Map<string, Job>()
 
 type RegistrarService = (page: any, domain: string, country: string | null) => Promise<RegistrarResponse>
 
@@ -29,8 +43,9 @@ const REGISTRARS: [string, RegistrarService][] = [
 const BOT_CHECK_TITLE = /just a moment|attention required|access denied|access to this page has been denied|security check/i
 
 // `country` (ISO code, from the visitor's browser) picks local registrar sites;
-// `onEvent` streams progress for the live story on the results page
-export const searchService = async(domain: string, country: string | null = null, onEvent: (event: SearchEvent) => void = () => {}) => {
+// `onEvent` streams progress for the live story on the results page;
+// `signal` says the caller stopped listening
+export const searchService = async(domain: string, country: string | null = null, onEvent: Listener = () => {}, signal?: AbortSignal) => {
     const key = `${domain.toLowerCase()}|${country ?? ''}`
     const cached = cache.get(key)
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
@@ -38,27 +53,63 @@ export const searchService = async(domain: string, country: string | null = null
         return cached.data
     }
 
-    if (inFlight > 0) onEvent({ type: 'queued' })
-    inFlight++
-    const run = queue.then(() => scrape(domain, country, onEvent))
-    queue = run.catch(() => {})
-    const data = await run.finally(() => { inFlight-- })
+    let job = jobs.get(key)
+    if (!job || job.abort.signal.aborted) {
+        const abort = new AbortController()
+        const listeners = new Set<Listener>()
+        const events: SearchEvent[] = []
+        const emit: Listener = (event) => {
+            events.push(event)
+            listeners.forEach((listener) => listener(event))
+        }
+        if (jobs.size > 0) emit({ type: 'queued' })
+        const promise = queue.then(() => scrape(domain, country, emit, abort.signal))
+        queue = promise.catch(() => {})
+        const newJob: Job = { listeners, events, abort, promise }
+        jobs.set(key, newJob)
 
-    for (const [k, v] of cache) {
-        if (Date.now() - v.at >= CACHE_TTL_MS) cache.delete(k)
+        const settle = () => { if (jobs.get(key) === newJob) jobs.delete(key) }
+        promise.then((data) => {
+            settle()
+            for (const [k, v] of cache) {
+                if (Date.now() - v.at >= CACHE_TTL_MS) cache.delete(k)
+            }
+            // Only complete answers: if a registrar failed, "Try again" should really try again
+            if (data.result.every(r => r.status === 'fulfilled')) {
+                cache.set(key, { at: Date.now(), data })
+            }
+        }, settle)
+        job = newJob
     }
-    if (data.result.some(r => r.status === 'fulfilled')) {
-        cache.set(key, { at: Date.now(), data })
+
+    // Catch up on what this search has already done, then follow along
+    const current = job
+    current.events.forEach(onEvent)
+    current.listeners.add(onEvent)
+    signal?.addEventListener('abort', () => {
+        current.listeners.delete(onEvent)
+        if (current.listeners.size === 0) current.abort.abort()
+    }, { once: true })
+
+    try {
+        return await current.promise
+    } finally {
+        current.listeners.delete(onEvent)
     }
-    return data
 }
 
-const scrape = async(domain: string, country: string | null, onEvent: (event: SearchEvent) => void) => {
-    let context = null
+const scrape = async(domain: string, country: string | null, onEvent: Listener, signal: AbortSignal) => {
+    let context: Awaited<ReturnType<typeof openSearchPages>>['context'] | null = null
+    // Cancelled while running: closing the window makes every registrar stop right away
+    const onAbort = () => { void closeSearchContext(context) }
     try {
+        // Cancelled while it waited in the queue: nobody's watching, skip it
+        if (signal.aborted) throw { name: 'AbortError', message: 'Search cancelled' }
         onEvent({ type: 'stage', stage: 'launch' })
         const opened = await openSearchPages(REGISTRARS.length)
         context = opened.context
+        if (signal.aborted) onAbort()
+        signal.addEventListener('abort', onAbort, { once: true })
         onEvent({ type: 'stage', stage: 'open' })
 
         // console.log('Beginning Primary availability check');
@@ -94,6 +145,7 @@ const scrape = async(domain: string, country: string | null, onEvent: (event: Se
 
         console.log('Promises resolved, returning combined data...');
 
+        signal.removeEventListener('abort', onAbort)
         await closeSearchContext(context)
         console.log('🟢 Search window closed');
 
@@ -107,6 +159,7 @@ const scrape = async(domain: string, country: string | null, onEvent: (event: Se
     } catch (error) {
         const err = error as NativeError
         console.error('🔴 Search service error:', err.message);
+        signal.removeEventListener('abort', onAbort)
         await closeSearchContext(context)
         throw{
             success: false,

@@ -4,20 +4,27 @@
 
 import { hostingerSearchUrl } from "../markets.js";
 import { NO_PRICE } from "../price.js";
+import { sameDomain } from "../domain.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 // `country` picks Hostinger's site for the visitor's country, so prices are local
 export const hostingerService = async (hostingerPage: any, domain: string, country: string | null = null): Promise<RegistrarResponse> => {
     try {
-        const responsePromise = hostingerPage.waitForResponse((res: any) => res.url().includes("/api/domain/single-domain-search"))
+        // Only a successful answer: behind a Cloudflare check, the first reply is a 429
+        // "Just a moment..." page and the real one follows once the check passes
+        const responsePromise = hostingerPage.waitForResponse((res: any) => res.ok() && res.url().includes("/api/domain/single-domain-search"), { timeout: 0 })
+            // Settled by the 20s race below; don't leave a rejection behind when the window closes
+            .catch(() => null)
 
         const timeoutPromise = new Promise(resolve => {
             setTimeout(() => resolve(null),20000)
         })
 
         console.log('🟣 Hostinger response and timeout promise started');
-        
-        await hostingerPage.goto(`${hostingerSearchUrl(country)}?domain=${domain}&from=domain-name-search`)
+
+        // Also the Register link, so it opens the same country site the price came from
+        const url = `${hostingerSearchUrl(country)}?domain=${encodeURIComponent(domain)}&from=domain-name-search`
+        await hostingerPage.goto(url)
     
         const response = await Promise.race([
             responsePromise,
@@ -32,11 +39,12 @@ export const hostingerService = async (hostingerPage: any, domain: string, count
 
         const raw = await response.json()
 
-        if(raw.data.result.domain_name !== domain || !raw.data.result.available){
+        if(!sameDomain(raw.data.result.domain_name, domain) || !raw.data.result.available){
             return {
                 registrar: 'Hostinger',
                 status: `Unavailable`,
-                ...NO_PRICE
+                ...NO_PRICE,
+                url
             }
         }
         return {
@@ -45,7 +53,8 @@ export const hostingerService = async (hostingerPage: any, domain: string, count
             price: raw.data.result.product.price.purchase,
             // price: `$${raw.data.result.product.price.purchase}`
             amount: raw.data.result.product.price.purchase,
-            currency: raw.data.result.product.price.currency_code ?? null
+            currency: raw.data.result.product.price.currency_code ?? null,
+            url
         }
     } catch (error) {
         const err = error as NativeError

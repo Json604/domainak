@@ -1,4 +1,5 @@
 import { connect } from "puppeteer-real-browser";
+import { Launcher } from "chrome-launcher";
 import type { NativeError } from "../types/index.ts";
 
 type Browser = Awaited<ReturnType<typeof connect>>['browser']
@@ -10,6 +11,18 @@ type Page = Awaited<ReturnType<Browser['newPage']>>
 // minimized background window that never comes forward.
 // (Headless doesn't work: the registrars block it.)
 let browserPromise: Promise<Browser> | null = null
+
+// puppeteer-real-browser's own flags, minus the --no-sandbox it always adds:
+// this Chrome stays open on people's machines, so it keeps Chrome's sandbox.
+// (Only root on Linux needs it off, or Chrome refuses to start.)
+const chromeFlags = () => {
+    const flags = Launcher.defaultFlags().filter((f) => !f.startsWith('--disable-component-update'))
+    const i = flags.findIndex((f) => f.startsWith('--disable-features'))
+    if (i !== -1) flags[i] = `${flags[i]},AutomationControlled`
+    flags.push('--disable-dev-shm-usage')
+    if (process.platform === 'linux' && process.getuid?.() === 0) flags.push('--no-sandbox')
+    return flags
+}
 
 export const getBrowser = () => {
     if (!browserPromise) {
@@ -23,15 +36,23 @@ export const getBrowser = () => {
 
 const launch = async () => {
     console.log('🔵 Launching Chrome...');
-    const { browser, page } = await connect({
-        headless: false,
-        args: [],
-        customConfig: {},
-        turnstile: true,
-        connectOption: {},
-        disableXvfb: false,
-        ignoreAllFlags: false,
-    })
+    let connection
+    try {
+        connection = await connect({
+            headless: false,
+            args: chromeFlags(),
+            customConfig: {},
+            turnstile: true,
+            connectOption: {},
+            disableXvfb: false,
+            ignoreAllFlags: true,
+        })
+    } catch (error) {
+        // Shown on the results page and in the terminal, so make it actionable
+        const linux = process.platform === 'linux' ? ' On Linux without a desktop, also install xvfb (sudo apt install xvfb).' : ''
+        throw new Error(`Couldn't start Google Chrome, which Domainak uses to check the registrars. Install it from https://www.google.com/chrome/ and restart Domainak.${linux} (${(error as NativeError).message})`)
+    }
+    const { browser, page } = connection
     browser.on('disconnected', () => { browserPromise = null })
 
     // Chrome starts with one visible window: tuck it into the Dock/taskbar
@@ -59,24 +80,31 @@ export const openSearchPages = async (count: number) => {
     const minimizedWindow = { newWindow: true, windowState: 'minimized' } as { newWindow: boolean }
 
     const pages: Page[] = []
-    for (let i = 0; i < count; i++) {
-        const params = { url: 'about:blank', browserContextId: context.id!, background: true }
-        let targetId: string
-        try {
-            // The first tab creates the context's window: ask for it minimized
-            ({ targetId } = await cdp.send('Target.createTarget', i === 0 ? { ...params, ...minimizedWindow } : params))
-        } catch {
-            ({ targetId } = await cdp.send('Target.createTarget', params))
+    try {
+        for (let i = 0; i < count; i++) {
+            const params = { url: 'about:blank', browserContextId: context.id!, background: true }
+            let targetId: string
+            try {
+                // The first tab creates the context's window: ask for it minimized
+                ({ targetId } = await cdp.send('Target.createTarget', i === 0 ? { ...params, ...minimizedWindow } : params))
+            } catch {
+                ({ targetId } = await cdp.send('Target.createTarget', params))
+            }
+            // `_targetId` isn't public API, but it's the only link back from CDP to the Page
+            const target = await browser.waitForTarget((t) => (t as unknown as { _targetId: string })._targetId === targetId)
+            const page = (await target.page())!
+            // Pages behave as if focused even though the window is minimized
+            const session = await page.createCDPSession()
+            await session.send('Emulation.setFocusEmulationEnabled', { enabled: true })
+            pages.push(page)
         }
-        // `_targetId` isn't public API, but it's the only link back from CDP to the Page
-        const target = await browser.waitForTarget((t) => (t as unknown as { _targetId: string })._targetId === targetId)
-        const page = (await target.page())!
-        // Pages behave as if focused even though the window is minimized
-        const session = await page.createCDPSession()
-        await session.send('Emulation.setFocusEmulationEnabled', { enabled: true })
-        pages.push(page)
+    } catch (error) {
+        // Don't leave a half-built window behind
+        await closeSearchContext(context)
+        throw error
+    } finally {
+        await cdp.detach().catch(() => {})
     }
-    await cdp.detach()
 
     return { context, pages }
 }

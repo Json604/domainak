@@ -7,6 +7,7 @@ export interface RegistrarResult{
     // Machine-readable price; missing on results from older backends
     amount?: number | null
     currency?: string | null
+    url?: string
 }
 
 export interface RegistrarError{

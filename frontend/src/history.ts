@@ -27,15 +27,23 @@ const readHistory = (): HistoryEntry[] => {
     let entries: HistoryEntry[] = []
     try {
         const parsed: unknown = JSON.parse(raw ?? '[]')
-        if (Array.isArray(parsed)) {
-            entries = parsed.filter((e): e is HistoryEntry =>
-                typeof e?.domain === 'string' && typeof e?.at === 'number' && Array.isArray(e?.result))
-        }
+        if (Array.isArray(parsed)) entries = parsed.filter(isEntry)
     } catch {
         // Corrupt entry: start over
     }
     snapshot = { raw, entries }
     return entries
+}
+
+// Anything malformed (edited by hand, older versions) is skipped rather than crashing the page
+const isResult = (r: unknown) => {
+    const x = r as { status?: unknown, value?: { registrar?: unknown }, reason?: { registrar?: unknown } } | null
+    return (x?.status === 'fulfilled' && typeof x.value?.registrar === 'string')
+        || (x?.status === 'rejected' && typeof x.reason?.registrar === 'string')
+}
+const isEntry = (e: unknown): e is HistoryEntry => {
+    const x = e as Partial<HistoryEntry> | null
+    return typeof x?.domain === 'string' && typeof x.at === 'number' && Array.isArray(x.result) && x.result.every(isResult)
 }
 
 const writeHistory = (entries: HistoryEntry[] | null) => {
