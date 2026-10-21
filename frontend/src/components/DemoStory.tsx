@@ -30,7 +30,11 @@ const BOT_AT = 2.6
 const COMPARE_AT = 8.2
 const END_AT = 9.8
 
-const COMMAND = `git clone ${REPO_URL} && cd domainak && npm start`
+// Windows PowerShell 5.1 (the Windows default) doesn't understand `&&`
+const ON_WINDOWS = /Windows/i.test(navigator.userAgent)
+const COMMAND = ON_WINDOWS
+    ? `git clone ${REPO_URL}; cd domainak; npm start`
+    : `git clone ${REPO_URL} && cd domainak && npm start`
 
 const phaseAt = (name: Registrar, i: number, t: number): Phase => {
     const { botCheck, done } = TIMELINE[name]
@@ -172,8 +176,8 @@ const DemoStory = ({ domain }: { domain: string }) => {
                             <button onClick={copyCommand}>{copied ? 'Copied ✓' : 'Copy'}</button>
                         </div>
                         <p className="story-cta-note">
-                            Paste it into a terminal. You need <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node 18+</a> and
-                            Google Chrome. It opens at localhost:8000 by itself.
+                            Paste it into a terminal{ON_WINDOWS ? ' (PowerShell)' : ''}. You need <a href="https://git-scm.com" target="_blank" rel="noopener noreferrer">Git</a>,{' '}
+                            <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer">Node 18+</a> and Google Chrome. It opens at localhost:8000 by itself.
                         </p>
 
                         <div className="story-cta-actions">

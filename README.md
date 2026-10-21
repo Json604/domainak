@@ -51,7 +51,13 @@ Registrars block cloud servers, so the hosted site at [domainak.netlify.app](htt
 git clone https://github.com/Json604/domainak && cd domainak && npm start
 ```
 
-That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Node.js 18+** and **Google Chrome**. While Domainak runs, a real Chrome sits minimized in your Dock/taskbar: each search happens there in a background window, so nothing pops up or steals focus. The results page shows the search live as each registrar answers.
+On Windows PowerShell, use `;` instead of `&&`:
+
+```powershell
+git clone https://github.com/Json604/domainak; cd domainak; npm start
+```
+
+That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Git**, **Node.js 18+** and **Google Chrome**. While Domainak runs, a real Chrome sits minimized in your Dock/taskbar: each search happens there in a background window, so nothing pops up or steals focus. The results page shows the search live as each registrar answers.
 
 `npm start -- --no-open` skips opening the browser.
 
