@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { normalizeDomain } from '../domain'
+import { readDomain } from '../domain'
 import zigzag from '../assets/Vector 1.svg'
 import './result.css'
 import SocialLinks from '../components/SocialLinks'
@@ -14,7 +14,8 @@ import { IS_DEMO } from '../config'
 export const ResultPage = () => {
     const [searchParams] = useSearchParams()
     // Cleaned the same way as the search box, in case the URL was typed or pasted
-    const searchDomain = normalizeDomain(searchParams.get('domain'))
+    const search = readDomain(searchParams.get('domain'))
+    const searchDomain = search && !search.isSubdomain ? search.domain : null
     const saved = searchParams.get('saved') === '1'
     const [domain, setDomain] = useState('')
     const [error, setError] = useState(false)
@@ -22,20 +23,20 @@ export const ResultPage = () => {
     const nav = useNavigate()
 
     function handleSearch(){
-        const normalized = normalizeDomain(domain)
-        if (!normalized) {
+        const read = readDomain(domain)
+        if (!read) {
             setError(true)
             return
         }
 
         setError(false)
-        track('search', { search_term: normalized, from: 'results' })
+        track('search', { search_term: read.host, from: 'results' })
 
         // If same domain, trigger retry (live, even if it was opened from history). Otherwise navigate.
-        if (normalized === searchDomain) {
+        if (read.host === search?.host) {
             setRetryKey(prev => prev + 1)
         }
-        nav(`/results?domain=${encodeURIComponent(normalized)}`)
+        nav(`/results?domain=${encodeURIComponent(read.host)}`)
     }
 
     return(
@@ -59,7 +60,22 @@ export const ResultPage = () => {
 
         <div className="results-main">
             <PricingProvider>
-            {IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
+            {search?.isSubdomain ? (
+            <div className="error-state">
+                <h2 style={{fontWeight:500, overflowWrap: 'anywhere'}}>{search.host} can’t be registered on its own</h2>
+                <p style={{color: '#666', fontSize: '1.1rem'}}>
+                    It’s a subdomain of <strong>{search.domain}</strong>: registrars only sell the name right before the ending.
+                    Check it for a typo, or search {search.domain} instead.
+                </p>
+                <button
+                    onClick={() => nav(`/results?domain=${encodeURIComponent(search.domain)}`)}
+                    style={{ marginTop: '1rem', padding: '0.75rem 2rem', backgroundColor: '#111', color: '#fff', border: 'none', borderRadius: '0.5rem', fontSize: '1rem', cursor: 'pointer' }}
+                >
+                    Search {search.domain}
+                </button>
+            </div>
+            )
+            : IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
             : searchDomain ? (<SearchResults
                 key={`${searchDomain}-${retryKey}-${saved}`}
                 domain={searchDomain}

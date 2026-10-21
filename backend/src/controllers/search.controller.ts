@@ -1,16 +1,16 @@
 import {searchService} from "../services/search.service.js"
 import { parseCountry } from "../services/markets.js"
-import { normalizeDomain } from "../services/domain.js"
+import { checkDomain } from "../services/domain.js"
 import type { Request, Response, NextFunction } from "express"
 import type { ServiceError } from "../types/index.ts"
 
 
 export const searchController = async (req: Request,res: Response,next: NextFunction) => {
     try {
-        const domain = normalizeDomain(req.query.q)
+        const checked = checkDomain(req.query.q)
 
-        if(domain){
-            const results = await searchService(domain, parseCountry(req.query.country))
+        if('domain' in checked){
+            const results = await searchService(checked.domain, parseCountry(req.query.country))
 
             return res.json({
                 success: true,
@@ -20,7 +20,7 @@ export const searchController = async (req: Request,res: Response,next: NextFunc
 
         return res.json({
             success: false,
-            message: "Please enter a valid domain name, like example.com."
+            message: checked.message
         })
 
     } catch (error) {
@@ -48,11 +48,12 @@ export const searchStreamController = async (req: Request, res: Response) => {
         if (!res.writableEnded && !res.destroyed) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
     }
 
-    const domain = normalizeDomain(req.query.q)
-    if (!domain) {
-        send('failure', { message: 'Please enter a valid domain name, like example.com.' })
+    const checked = checkDomain(req.query.q)
+    if (!('domain' in checked)) {
+        send('failure', { message: checked.message })
         return res.end()
     }
+    const { domain } = checked
 
     // Tab closed or a new search started: let the search service cancel this one
     const stopped = new AbortController()

@@ -8,7 +8,7 @@ import HistoryMenu from './components/HistoryMenu'
 import { track } from './analytics'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { normalizeDomain } from './domain'
+import { readDomain } from './domain'
 
 function App() {
   const [domain, setDomain] = useState('')
@@ -16,15 +16,16 @@ function App() {
   const nav = useNavigate()
 
   function handleSearch(){
-    const normalized = normalizeDomain(domain)
-    if (!normalized) {
+    const read = readDomain(domain)
+    if (!read) {
       setError(true)
       return
     }
 
     setError(false)
-    track('search', { search_term: normalized, from: 'home' })
-    nav(`/results?domain=${encodeURIComponent(normalized)}`)
+    track('search', { search_term: read.host, from: 'home' })
+    // A subdomain goes through too: the results page explains it rather than guessing
+    nav(`/results?domain=${encodeURIComponent(read.host)}`)
   }
 
   return (
