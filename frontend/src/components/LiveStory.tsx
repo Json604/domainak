@@ -4,6 +4,7 @@ import { StoryBrowser, StoryNarration, StorySteps, type StoryTab } from './Story
 import { REGISTRARS, type Phase } from './storyData'
 import { API_URL } from '../config'
 import { usePricing, type Pricing } from '../pricing/context'
+import { detectCountry } from '../pricing/location'
 import type { PromiseResult, Registrar } from '../types'
 
 export interface SearchData {
@@ -62,7 +63,9 @@ const LiveStory = ({ domain, onDone, onError }: LiveStoryProps) => {
     }, [complete])
 
     useEffect(() => {
-        const es = new EventSource(`${API_URL}/search/stream?q=${encodeURIComponent(domain)}`)
+        // The country picks local GoDaddy/Hostinger sites, so their prices are the ones you'd pay
+        const country = detectCountry()
+        const es = new EventSource(`${API_URL}/search/stream?q=${encodeURIComponent(domain)}${country ? `&country=${country}` : ''}`)
         let closed = false
         let doneTimer: ReturnType<typeof setTimeout> | undefined
         // Close on every ending, or EventSource reconnects and searches again

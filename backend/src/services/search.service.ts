@@ -5,7 +5,7 @@ import { hostingerService } from "./registrars/hostinger.js";
 import { spaceshipService } from "./registrars/spaceship.js";
 import { namecheapService } from "./registrars/namecheap.js";
 import { closeSearchContext, openSearchPages } from "./browser.js";
-import type { NativeError, SearchEvent } from "../types/index.ts";
+import type { NativeError, RegistrarResponse, SearchEvent } from "../types/index.ts";
 
 // One Chrome at a time is plenty for a single machine: searches queue
 // up behind each other and recent results are reused.
@@ -14,21 +14,24 @@ const cache = new Map<string, { at: number, data: Awaited<ReturnType<typeof scra
 let queue: Promise<unknown> = Promise.resolve()
 let inFlight = 0
 
-const REGISTRARS = [
+type RegistrarService = (page: any, domain: string, country: string | null) => Promise<RegistrarResponse>
+
+const REGISTRARS: [string, RegistrarService][] = [
     ['Godaddy', godaddyService],
     ['Dynadot', dynaService],
     ['Porkbun', porkbunservice],
     ['Hostinger', hostingerService],
     ['Namecheap', namecheapService],
     ['Spaceship', spaceshipService],
-] as const
+]
 
 // Page titles of the bot walls (Cloudflare, Akamai, PerimeterX)
 const BOT_CHECK_TITLE = /just a moment|attention required|access denied|access to this page has been denied|security check/i
 
+// `country` (ISO code, from the visitor's browser) picks local registrar sites;
 // `onEvent` streams progress for the live story on the results page
-export const searchService = async(domain: string, onEvent: (event: SearchEvent) => void = () => {}) => {
-    const key = domain.toLowerCase()
+export const searchService = async(domain: string, country: string | null = null, onEvent: (event: SearchEvent) => void = () => {}) => {
+    const key = `${domain.toLowerCase()}|${country ?? ''}`
     const cached = cache.get(key)
     if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
         console.log('🟢 Serving cached result for', key);
@@ -37,7 +40,7 @@ export const searchService = async(domain: string, onEvent: (event: SearchEvent)
 
     if (inFlight > 0) onEvent({ type: 'queued' })
     inFlight++
-    const run = queue.then(() => scrape(domain, onEvent))
+    const run = queue.then(() => scrape(domain, country, onEvent))
     queue = run.catch(() => {})
     const data = await run.finally(() => { inFlight-- })
 
@@ -50,7 +53,7 @@ export const searchService = async(domain: string, onEvent: (event: SearchEvent)
     return data
 }
 
-const scrape = async(domain: string, onEvent: (event: SearchEvent) => void) => {
+const scrape = async(domain: string, country: string | null, onEvent: (event: SearchEvent) => void) => {
     let context = null
     try {
         onEvent({ type: 'stage', stage: 'launch' })
@@ -79,7 +82,7 @@ const scrape = async(domain: string, onEvent: (event: SearchEvent) => void) => {
                 if (!settled) onEvent({ type: 'phase', registrar, phase: BOT_CHECK_TITLE.test(title) ? 'bot' : 'reading' })
             })
 
-            const result = await service(page, domain).then(
+            const result = await service(page, domain, country).then(
                 (value) => ({ status: 'fulfilled', value }) as const,
                 (reason) => ({ status: 'rejected', reason }) as const,
             )

@@ -4,6 +4,7 @@ import zigzag from './assets/Vector 1.svg'
 import LogoMarquee from './components/logoMarquee'
 import Loader from './components/loader_animations/loader'
 import SocialLinks from './components/SocialLinks'
+import HistoryMenu from './components/HistoryMenu'
 import { track } from './analytics'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -39,6 +40,7 @@ function App() {
             <img src={zigzag} className="brand-underline" alt="" />
           </div>
           <div className="header-actions">
+            <HistoryMenu />
             <SocialLinks />
           </div>
         </header>

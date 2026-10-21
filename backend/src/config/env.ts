@@ -6,8 +6,6 @@ config({ path: `.env.${process.env.NODE_ENV}.local`, quiet: true });
 export const{
     PORT = '8000',
     NODE_ENV = 'development',
-    GODADDY_URL = 'https://www.godaddy.com/en-in/domainsearch/find',
-    HOSTINGER_URL = 'https://www.hostinger.com/in/domain-name-results',
     NAMECHEAP_URL = 'https://www.namecheap.com/domains/registration/results/',
     DYNADOT_URL = 'https://www.dynadot.com/domain/search',
     PORKBUN_URL = 'https://porkbun.com/products/domains',

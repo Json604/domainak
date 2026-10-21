@@ -2,21 +2,22 @@
 // ⚠️⚠️ returns next available if taken ⚠️⚠️ (keep in mind)
 // It is checking availability server side so if returned domain is different from searched then return notAvailable
 
-import { HOSTINGER_URL } from "../../config/env.js";
+import { hostingerSearchUrl } from "../markets.js";
 import { NO_PRICE } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
-export const hostingerService = async (hostingerPage: any, domain: string): Promise<RegistrarResponse> => {
+// `country` picks Hostinger's site for the visitor's country, so prices are local
+export const hostingerService = async (hostingerPage: any, domain: string, country: string | null = null): Promise<RegistrarResponse> => {
     try {
         const responsePromise = hostingerPage.waitForResponse((res: any) => res.url().includes("/api/domain/single-domain-search"))
 
         const timeoutPromise = new Promise(resolve => {
-            setTimeout(() => resolve(null),10000)
+            setTimeout(() => resolve(null),20000)
         })
 
         console.log('🟣 Hostinger response and timeout promise started');
         
-        await hostingerPage.goto(`${HOSTINGER_URL}?domain=${domain}&from=domain-name-search`)
+        await hostingerPage.goto(`${hostingerSearchUrl(country)}?domain=${domain}&from=domain-name-search`)
     
         const response = await Promise.race([
             responsePromise,
@@ -24,12 +25,9 @@ export const hostingerService = async (hostingerPage: any, domain: string): Prom
         ])
         console.log("🟣 Hostinger response and timeout promise resolved");
 
+        // No answer isn't the same as "taken" (Hostinger answers for taken domains too)
         if(!response){
-            return{
-                registrar: 'Hostinger',
-                status: 'Unavailable',
-                ...NO_PRICE
-            }
+            throw { name: 'TimeoutError', message: 'Hostinger did not answer within 20s' }
         }
 
         const raw = await response.json()

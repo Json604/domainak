@@ -72,9 +72,9 @@ cd frontend && npm install && npm run dev    # UI on http://localhost:5173
 
 ## API
 
-**GET /search?q={domain}**
+**GET /search?q={domain}&country={CC}**
 
-Search for domain availability across all registrars.
+Search for domain availability across all registrars. `country` (optional, ISO code like `IN`) picks Hostinger's site for that country so its price is local; GoDaddy picks its country site from your IP by itself. The other four registrars price in USD worldwide. The results page sends the country it reads from your browser's timezone.
 
 Example:
 ```

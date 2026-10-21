@@ -1,4 +1,5 @@
 import {searchService} from "../services/search.service.js"
+import { parseCountry } from "../services/markets.js"
 import { parse } from "tldts"
 import type { Request, Response, NextFunction } from "express"
 import type { ServiceError } from "../types/index.ts"
@@ -14,7 +15,7 @@ export const searchController = async (req: Request,res: Response,next: NextFunc
         const domain = req.query.q as string
 
         if(isValidDomain(domain)){
-            const results = await searchService(domain)
+            const results = await searchService(domain, parseCountry(req.query.country))
 
             return res.json({
                 success: true,
@@ -56,7 +57,7 @@ export const searchStreamController = async (req: Request, res: Response) => {
     }
 
     try {
-        const results = await searchService(domain, (event) => send('progress', event))
+        const results = await searchService(domain, parseCountry(req.query.country), (event) => send('progress', event))
         send('done', results)
     } catch (error) {
         const err = error as ServiceError
