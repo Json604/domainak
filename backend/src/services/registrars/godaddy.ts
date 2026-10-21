@@ -9,16 +9,6 @@ export const godaddyService = async (godaddyPage: any, domain:any): Promise<Regi
     
         await godaddyPage.goto(`${GODADDY_URL}?domainToCheck=${domain}`)
 
-        await godaddyPage.screenshot({path:'godaddy-debug.png', fullPage: true })
-
-        const html = await godaddyPage.content()
-        console.log('🔍 Page HTML:', html.substring(0, 2000))  // First 2000 chars
-        const title = await godaddyPage.title()
-        console.log('🔍 Page title:', title)
-        // If it says "Access Denied" or "Captcha", you're being blocked
-
-
-        
         const response = await responsePromise;
         console.log('⚪️ Godaddy network Req promise resolved');
         
@@ -45,7 +35,6 @@ export const godaddyService = async (godaddyPage: any, domain:any): Promise<Regi
         }
     } catch (error) {
         const err = error as NativeError
-        await godaddyPage.screenshot({path:'godaddy-debug.png', fullPage: true })
         throw{
             registrar: 'Godaddy',
             type: err.name || 'Unknown Error',

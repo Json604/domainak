@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { NODE_ENV, PORT } from "./config/env.js";
 import { searchRouter } from "./routes/search.route.js";
 import {rateLimit} from "express-rate-limit";
@@ -17,8 +19,17 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('🔴 Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
+// Behind Caddy in production: use the real client IP for rate limiting
+app.set('trust proxy', 1);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://domainak.store',
+    'https://www.domainak.store',
+    'https://domainak.netlify.app',
+  ],
   credentials: true
 }));
 
@@ -31,10 +42,17 @@ const limiter = rateLimit({
 	// store: ... , // Redis, Memcached, etc. See below.
 })
 
-app.use(limiter)
+app.use('/search', limiter)
 app.use(express.json());
 
 app.use('/', searchRouter)
+
+// Local one-command mode (`npm start` at the repo root): serve the built frontend too
+const frontendDist = fileURLToPath(new URL('../../frontend/dist/', import.meta.url));
+if (existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get('/results', (req, res) => res.sendFile(`${frontendDist}index.html`));
+}
 
 app.get("/", (req, res) => res.json({ message: "backend/domainak.store working fine!!" }));
 

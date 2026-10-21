@@ -7,11 +7,38 @@ import { spaceshipService } from "./registrars/spaceship.js";
 import { namecheapService } from "./registrars/namecheap.js";
 import type { NativeError } from "../types/index.ts";
 
+// One Chrome at a time is plenty for a single machine: searches queue
+// up behind each other and recent results are reused.
+const CACHE_TTL_MS = 10 * 60 * 1000
+const cache = new Map<string, { at: number, data: Awaited<ReturnType<typeof scrape>> }>()
+let queue: Promise<unknown> = Promise.resolve()
+
 export const searchService = async(domain: string) => {
+    const key = domain.toLowerCase()
+    const cached = cache.get(key)
+    if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+        console.log('🟢 Serving cached result for', key);
+        return cached.data
+    }
+
+    const run = queue.then(() => scrape(domain))
+    queue = run.catch(() => {})
+    const data = await run
+
+    for (const [k, v] of cache) {
+        if (Date.now() - v.at >= CACHE_TTL_MS) cache.delete(k)
+    }
+    if (data.result.some(r => r.status === 'fulfilled')) {
+        cache.set(key, { at: Date.now(), data })
+    }
+    return data
+}
+
+const scrape = async(domain: string) => {
     let browser = null
     try {
         const connection = await connect({
-            headless: true,
+            headless: false,
             args: [],
             customConfig: {},
             turnstile: true,
@@ -38,22 +65,22 @@ export const searchService = async(domain: string) => {
             //     return 'This domain is already taken.'
         // }
         
-        // const godaddyPage = await context.newPage()
+        const godaddyPage = await context.newPage()
         const dynaPage = await context.newPage()
-        // const porkbunPage = await context.newPage()
-        // const hostingerPage = await context.newPage()
-        // const namecheapPage = await context.newPage()
-        // const spaceshipPage = await context.newPage()
+        const porkbunPage = await context.newPage()
+        const hostingerPage = await context.newPage()
+        const namecheapPage = await context.newPage()
+        const spaceshipPage = await context.newPage()
 
         console.log('Parallel scraping started');
 
         const secondaryPromises = await Promise.allSettled([
-            // godaddyService(godaddyPage, domain),
+            godaddyService(godaddyPage, domain),
             dynaService(dynaPage, domain),
-            // porkbunservice(porkbunPage, domain),
-            // hostingerService(hostingerPage, domain),
-            // namecheapService(namecheapPage, domain),
-            // spaceshipService(spaceshipPage, domain),
+            porkbunservice(porkbunPage, domain),
+            hostingerService(hostingerPage, domain),
+            namecheapService(namecheapPage, domain),
+            spaceshipService(spaceshipPage, domain),
         ])
 
         console.log('Promises resolved, returning combined data...');

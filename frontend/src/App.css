@@ -251,3 +251,10 @@ span::selection{
   .icon-button img{width: 2;height: 2;}
   .signin{font-size: 0.8rem;}
 }
+
+.github-link{
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 150ms ease;
+}
+.github-link:hover{ opacity: 0.6; }

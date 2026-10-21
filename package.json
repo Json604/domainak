@@ -1,0 +1,12 @@
+{
+  "name": "domainak",
+  "private": true,
+  "description": "Search once, compare domain prices across 6 registrars. `npm start` runs it locally with real results.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/start.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

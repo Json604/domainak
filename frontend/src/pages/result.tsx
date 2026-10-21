@@ -8,6 +8,9 @@ import handloader from '../assets/handLoader.json'
 import Lottie from "lottie-react"
 import StatusBadge from '../components/StatusBadge'
 import ResultsList from '../components/ResultsList'
+import GithubLink from '../components/GithubLink'
+import DemoStory from '../components/DemoStory'
+import { API_URL, IS_DEMO } from '../config'
 import type { PromiseResult } from "../types"
 
 interface ApiResponse{
@@ -23,7 +26,7 @@ export const ResultPage = () => {
     const searchDomain = searchParams.get('domain')
     const [data, setData] = useState<ApiResponse | null>(null)
     // const [loading, setLoading] = useState(false)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(!IS_DEMO)
     const [domain, setDomain] = useState('')
     const [error, setError] = useState(false)
     const [fetchError, setFetchError] = useState<string | null>(null)
@@ -31,10 +34,11 @@ export const ResultPage = () => {
     const nav = useNavigate()
 
     useEffect(() => {
+        if (IS_DEMO) return
         setLoading(true)
         setFetchError(null)
         setData(null)
-        fetch(`http://localhost:8000/search?q=${searchDomain}`)
+        fetch(`${API_URL}/search?q=${encodeURIComponent(searchDomain ?? '')}`)
         .then(res => {
             if (!res.ok) throw new Error('Server error')
             return res.json()
@@ -86,6 +90,7 @@ export const ResultPage = () => {
             </form>
 
             <div className="other-actions">
+                <GithubLink />
                 <button className="icon-button" aria-label="favorites">
                 <img src={heart} width={22} height={22} alt="favorites" />
                 </button>
@@ -94,7 +99,8 @@ export const ResultPage = () => {
         </div>
 
         <div className="results-main">
-            {loading ? (<Lottie className="loading-animation" animationData={handloader}/>)
+            {IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
+            : loading ? (<Lottie className="loading-animation" animationData={handloader}/>)
             : fetchError ? (
             <div className="error-state">
                 <h2 style={{fontWeight:500, color: '#d14343'}}>Oops!</h2>

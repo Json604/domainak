@@ -10,8 +10,8 @@ export const namecheapService = async (namecheapPage: any, domain: string): Prom
     
         const ReqPromises = [
             namecheapPage.waitForResponse((res: any) => res.url().includes("/domains/tlds.ashx")),
-            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://rtb.namecheapapi.com/api/domains")),
-            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://domains.revved.com/v1/domainStatus?domains"))
+            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://rtb.namecheap.com/api/domains?")),
+            namecheapPage.waitForResponse((res: any) => res.url().startsWith("https://domain-search.namecheap.com/v1/domainStatus?"))
         ]
         console.log(`🟠 Namecheap net req promise started`);
     

@@ -43,39 +43,26 @@ domainak/
 │       └── routes/
 ```
 
-## Getting Started
+## Run it (one command)
 
-### Prerequisites
-- Node.js 18+
-- npm
-
-### Backend Setup
+Registrars block cloud servers, so the hosted site at [domainak.netlify.app](https://domainak.netlify.app) is a staged demo. For real prices, run it on your machine:
 
 ```bash
-cd backend
-npm install
+git clone https://github.com/Json604/domainak && cd domainak && npm start
 ```
 
-Create `.env.development.local`:
-```
-PORT=8000
-NODE_ENV=development
-```
+That installs everything (first run only), builds, starts the app and opens `http://localhost:8000`. You need **Node.js 18+** and **Google Chrome**. Each search opens a real Chrome window for ~15 seconds: that's the scraper at work.
 
-Start the server:
-```bash
-npm run dev
-```
+`npm start -- --no-open` skips opening the browser.
 
-### Frontend Setup
+## Development
 
 ```bash
-cd frontend
-npm install
-npm run dev
+cd backend && npm install && npm run dev     # API on http://localhost:8000
+cd frontend && npm install && npm run dev    # UI on http://localhost:5173
 ```
 
-Frontend runs on `http://localhost:5173`, backend on `http://localhost:8000`.
+`VITE_APP_MODE` switches the frontend between `live` (real backend, the default) and `demo` (the staged story, used in production via `frontend/.env.production`).
 
 ## API
 
@@ -113,6 +100,9 @@ Response:
 **Backend**
 - `npm run dev` - Start with hot reload
 - `npm run start` - Production mode
+
+**Repo root**
+- `npm start` - Install, build and run everything locally
 
 ## License
 
