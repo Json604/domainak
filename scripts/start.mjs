@@ -31,7 +31,7 @@ for (const [name, dir] of [['backend', backend], ['frontend', frontend]]) {
 }
 
 step('Building…')
-npm(frontend, ['run', 'build', '--silent'], { VITE_APP_MODE: 'live' })
+npm(frontend, ['run', 'build', '--silent', '--', '--logLevel', 'error'], { VITE_APP_MODE: 'live' })
 npm(backend, ['run', 'build', '--silent'])
 
 step(`Starting Domainak on ${URL_}`)
