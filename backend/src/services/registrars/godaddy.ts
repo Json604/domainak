@@ -1,5 +1,6 @@
 // (DOES NOT WORK IN HEADLESS)
 import { GODADDY_URL } from "../../config/env.js";
+import { NO_PRICE, parseDisplayPrice } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const godaddyService = async (godaddyPage: any, domain:any): Promise<RegistrarResponse> => {
@@ -18,20 +19,22 @@ export const godaddyService = async (godaddyPage: any, domain:any): Promise<Regi
             return{
                 registrar: 'Godaddy',
                 status: 'Available',
-                price: raw.CurrentPriceDisplay
+                price: raw.CurrentPriceDisplay,
+                ...parseDisplayPrice(raw.CurrentPriceDisplay)
             }
         } if(!raw.ExactMatchDomain.IsAvailable && raw.ExactMatchDomain.Fqdn === domain && raw.ExactMatchDomain.AftermarketMinPriceDisplay){
             return{
                 registrar: 'Godaddy',
                 status: 'Available Aftermarket',
-                price: raw.ExactMatchDomain.AftermarketMinPriceDisplay
+                price: raw.ExactMatchDomain.AftermarketMinPriceDisplay,
+                ...parseDisplayPrice(raw.ExactMatchDomain.AftermarketMinPriceDisplay)
             }
         }
         
         return{
             registrar: 'Godaddy',
             status: 'Unavailable',
-            price: null
+            ...NO_PRICE
         }
     } catch (error) {
         const err = error as NativeError

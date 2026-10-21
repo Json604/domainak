@@ -12,7 +12,11 @@ export interface NativeError {
 export interface RegistrarResponse {
     registrar: string
     status: string | boolean
+    // As the registrar shows it, e.g. "₹ 1.00" or "$8.88"
     price: string | number | null
+    // Machine-readable version of `price`, for converting between currencies
+    amount: number | null
+    currency: string | null
 }
 // Progress streamed to the results page while a search runs
 export type SearchEvent =

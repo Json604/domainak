@@ -10,6 +10,8 @@ import SocialLinks from '../components/SocialLinks'
 import { track } from '../analytics'
 import DemoStory from '../components/DemoStory'
 import LiveStory, { type SearchData } from '../components/LiveStory'
+import CurrencyPicker, { RatesNote } from '../components/CurrencyPicker'
+import PricingProvider from '../pricing/PricingProvider'
 import { IS_DEMO } from '../config'
 import type { PromiseResult } from "../types"
 
@@ -87,6 +89,7 @@ export const ResultPage = () => {
         </div>
 
         <div className="results-main">
+            <PricingProvider>
             {IS_DEMO ? (<DemoStory key={`${searchDomain}-${retryKey}`} domain={searchDomain || 'yourname.com'} />)
             : loading ? (<LiveStory key={`${searchDomain}-${retryKey}`} domain={searchDomain ?? ''} onDone={handleDone} onError={handleError} />)
             : fetchError ? (
@@ -123,12 +126,17 @@ export const ResultPage = () => {
                     }) ? 'available' : 'unavailable'} size="large" />
                 </div>
                 
-                <h5 style={{fontWeight:500 , color:'gray'}}>Checked across 6 registrars</h5>
+                <div className="results-meta">
+                    <h5 style={{fontWeight:500 , color:'gray'}}>Checked across 6 registrars</h5>
+                    <CurrencyPicker />
+                </div>
             </div>
             
-            <ResultsList results={data?.data?.result} />
+            <ResultsList results={data?.data?.result} domain={searchDomain ?? ''} />
+            <RatesNote />
             </motion.div>
             )}
+            </PricingProvider>
         </div>
 
         {/* <div className="alternatives"></div> */}

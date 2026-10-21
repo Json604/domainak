@@ -2,6 +2,7 @@
 
 import { parse } from "tldts";
 import { NAMECHEAP_URL } from "../../config/env.js";
+import { NO_PRICE } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const namecheapService = async (namecheapPage: any, domain: string): Promise<RegistrarResponse> => {
@@ -32,19 +33,21 @@ export const namecheapService = async (namecheapPage: any, domain: string): Prom
             return{
                 registrar: 'Namecheap',
                 status: 'Unavailable',
-                price: null
+                ...NO_PRICE
             }
         }
 
         let namecheapRes: RegistrarResponse = {
             registrar: 'Namecheap',
             status: raw[2].status[0].available,
-            price: null
+            ...NO_PRICE
         }
         if(namecheapRes.status === false){
             namecheapRes.price = null
         } else{
             namecheapRes.price = `$${raw[0][0].Pricing.Price}`
+            namecheapRes.amount = Number(raw[0][0].Pricing.Price)
+            namecheapRes.currency = 'USD'
         }
      
         console.log(`🟠 NamecheapRes copied`);

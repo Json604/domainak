@@ -1,5 +1,6 @@
 // ✅ ✅ !!!!!!!!!!!!!!!!!!!(WORKS HEADLESS)
 import { DYNADOT_URL } from "../../config/env.js";
+import { NO_PRICE } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const dynaService = async (dynaPage: any, domain: string): Promise<RegistrarResponse> => {
@@ -22,17 +23,21 @@ export const dynaService = async (dynaPage: any, domain: string): Promise<Regist
         console.log("🔵 DynaRes Filtered");
 
         if(exactMatch){
+            const amount = parseFloat(exactMatch.priceNoSymbol)
+            const priced = Number.isFinite(amount) && exactMatch.currency
             return {
             registrar: 'Dynadot',
             status: exactMatch.status,
-            price: exactMatch.price
+            price: exactMatch.price,
+            amount: priced ? amount : null,
+            currency: priced ? exactMatch.currency : null
             }
         }
 
         return {
             registrar: 'Dynadot',
             status: 'Unavailable',
-            price: null
+            ...NO_PRICE
         };
     } catch (error) {
         const err = error as NativeError

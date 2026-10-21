@@ -3,6 +3,7 @@
 // It is checking availability server side so if returned domain is different from searched then return notAvailable
 
 import { HOSTINGER_URL } from "../../config/env.js";
+import { NO_PRICE } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const hostingerService = async (hostingerPage: any, domain: string): Promise<RegistrarResponse> => {
@@ -27,7 +28,7 @@ export const hostingerService = async (hostingerPage: any, domain: string): Prom
             return{
                 registrar: 'Hostinger',
                 status: 'Unavailable',
-                price: null
+                ...NO_PRICE
             }
         }
 
@@ -37,14 +38,16 @@ export const hostingerService = async (hostingerPage: any, domain: string): Prom
             return {
                 registrar: 'Hostinger',
                 status: `Unavailable`,
-                price: null
+                ...NO_PRICE
             }
         }
         return {
             registrar: 'Hostinger',
             status: raw.data.result.available,
-            price: raw.data.result.product.price.purchase
+            price: raw.data.result.product.price.purchase,
             // price: `$${raw.data.result.product.price.purchase}`
+            amount: raw.data.result.product.price.purchase,
+            currency: raw.data.result.product.price.currency_code ?? null
         }
     } catch (error) {
         const err = error as NativeError

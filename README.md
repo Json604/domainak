@@ -81,20 +81,33 @@ Example:
 GET /search?q=example.com
 ```
 
-Response:
+Response (`result` holds one settled promise per registrar):
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "registrar": "Namecheap",
-      "status": "available",
-      "price": 799,
-      "currency": "₹"
-    }
-  ]
+  "data": {
+    "domain": "example.com",
+    "result": [
+      {
+        "status": "fulfilled",
+        "value": {
+          "registrar": "Spaceship",
+          "status": "Available",
+          "price": "$8.88",
+          "amount": 8.88,
+          "currency": "USD"
+        }
+      }
+    ]
+  }
 }
 ```
+
+`price` is what the registrar displays; `amount` + `currency` (ISO 4217) are the same price in machine-readable form.
+
+**GET /rates**
+
+Daily exchange rates (units per 1 USD, cached 12h) that the results page uses to show every price in the visitor's currency, guessed from the browser's timezone and language and changeable with the picker. Rates by [Exchange Rate API](https://www.exchangerate-api.com).
 
 **GET /search/stream?q={domain}**
 

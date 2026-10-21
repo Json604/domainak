@@ -4,6 +4,9 @@ export interface RegistrarResult{
     registrar: Registrar
     status: string | boolean
     price: string | number | null
+    // Machine-readable price; missing on results from older backends
+    amount?: number | null
+    currency?: string | null
 }
 
 export interface RegistrarError{

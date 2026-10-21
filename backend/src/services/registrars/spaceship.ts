@@ -1,5 +1,6 @@
 // ✅ ✅ (scrap from DOM selector) (DOES NOT WORK IN HEADLESS)
 import { SPACESHIP_URL } from "../../config/env.js"
+import { NO_PRICE, parseDisplayPrice } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const spaceshipService = async (spaceshipPage: any, domain: string):Promise<RegistrarResponse> => {
@@ -19,24 +20,26 @@ export const spaceshipService = async (spaceshipPage: any, domain: string):Promi
         const afterMarketEl = await spaceshipPage.$('div.main-result__aftermarket__container')
         
         if(priceEl){
+            const price = await spaceshipPage.$eval('span.main-result__available__prices__text__purchase', (e: any) => e.textContent.trim())
             return{
                 registrar: 'Spaceship',
                 status: 'Available',
-                price: await spaceshipPage.$eval('span.main-result__available__prices__text__purchase', (e: any) => e.textContent.trim())
+                price,
+                ...parseDisplayPrice(price)
             }
         }
         if(afterMarketEl){
             return{
                 registrar: 'Spaceship',
                 status: 'Available Aftermarket',
-                price: null
+                ...NO_PRICE
             }
         }
 
         return {
             registrar: 'Spaceship',
             status: 'Unavailable',
-            price: null
+            ...NO_PRICE
         }
 
     

@@ -1,14 +1,33 @@
 import RegistrarLogo from './RegistrarLogo'
 import StatusBadge from './StatusBadge'
 import RegisterButton from './RegisterButton'
+import { usePricing } from '../pricing/context'
+import type { PriceView } from '../pricing/currency'
 import type { PromiseResult } from '../types'
 
 interface RegistrarCardProps {
     result: PromiseResult
+    domain: string
     isRecommended?: boolean
 }
 
-const RegistrarCard = ({ result, isRecommended = false }: RegistrarCardProps) => {
+// Price in the visitor's currency, with the registrar's own price underneath when converted
+const Price = ({ view, size }: { view: PriceView, size: string }) => {
+    if (!view.main) return <>—</>
+    return (
+        <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <span style={{ fontSize: size }}>{view.main}/year</span>
+            {view.original && (
+                <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#999' }} title="The registrar's own price">
+                    {view.original}
+                </span>
+            )}
+        </span>
+    )
+}
+
+const RegistrarCard = ({ result, domain, isRecommended = false }: RegistrarCardProps) => {
+    const { view } = usePricing()
     const isFulfilled = result.status === 'fulfilled'
     const data = isFulfilled ? result.value : null
     
@@ -43,11 +62,7 @@ const RegistrarCard = ({ result, isRecommended = false }: RegistrarCardProps) =>
     const isAftermarket = statusStr.includes('aftermarket')
     const canRegister = isAvailable || isAftermarket
 
-    const formatPrice = (price: string | number | null) => {
-        if (!price || price === '') return '—'
-        if (typeof price === 'number') return `₹${price}/year`
-        return `${price}/year`
-    }
+    const price = view(data)
 
     if (isRecommended) {
         return (
@@ -81,10 +96,10 @@ const RegistrarCard = ({ result, isRecommended = false }: RegistrarCardProps) =>
                         </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                        <span style={{ fontWeight: 600, fontSize: '1.5rem' }}>
-                            {formatPrice(data.price)}
+                        <span style={{ fontWeight: 600 }}>
+                            <Price view={price} size="1.5rem" />
                         </span>
-                        <RegisterButton registrar={data.registrar} />
+                        <RegisterButton registrar={data.registrar} domain={domain} />
                     </div>
                 </div>
             </div>
@@ -112,9 +127,9 @@ const RegistrarCard = ({ result, isRecommended = false }: RegistrarCardProps) =>
                 minWidth: '100px',
                 textAlign: 'right',
             }}>
-                {canRegister ? formatPrice(data.price) : '—'}
+                {canRegister ? <Price view={price} size="1rem" /> : '—'}
             </span>
-            <RegisterButton registrar={data.registrar} disabled={!canRegister} />
+            <RegisterButton registrar={data.registrar} domain={domain} disabled={!canRegister} />
         </div>
     )
 }

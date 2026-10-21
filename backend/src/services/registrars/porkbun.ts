@@ -1,5 +1,6 @@
 // ✅ ✅ (DOES NOT WORK IN HEADLESS)
 import { PORKBUN_URL } from "../../config/env.js";
+import { NO_PRICE } from "../price.js";
 import type { NativeError, RegistrarResponse } from "../../types/index.ts";
 
 export const porkbunservice = async(porkbunPage: any,domain: string): Promise<RegistrarResponse> => {
@@ -22,14 +23,16 @@ export const porkbunservice = async(porkbunPage: any,domain: string): Promise<Re
             return{
                 registrar: 'Porkbun',
                 status: exactMatch.result,
-                price: `$${(exactMatch.extended.typePricing.registration.price)/100}`
+                price: `$${(exactMatch.extended.typePricing.registration.price)/100}`,
+                amount: exactMatch.extended.typePricing.registration.price / 100,
+                currency: 'USD'
             }
         }
 
         return{
             registrar: 'Porkbun',
             status: 'Unavailable',
-            price: null
+            ...NO_PRICE
         }    
     } catch (error) {
         const err = error as NativeError

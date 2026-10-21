@@ -92,3 +92,36 @@
     .results-search{ order: 3; width: 100%; }
     .results-search-btn{ width: auto; padding: 0 1.25rem; }
 }
+
+.results-meta{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.currency-picker{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.currency-picker select{
+    font: inherit;
+    color: #111;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+    background: #fff;
+    cursor: pointer;
+}
+
+.rates-note{
+    margin: 1rem 0 3rem;
+    font-size: 0.8rem;
+    color: #999;
+}
+.rates-note a{ color: #777; }

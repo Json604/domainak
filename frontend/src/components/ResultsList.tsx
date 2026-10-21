@@ -1,11 +1,14 @@
-import type { PromiseResult } from '../types'
+import type { PromiseResult, RegistrarResult } from '../types'
 import RegistrarCard from './RegistrarCard'
+import { usePricing } from '../pricing/context'
 
 interface ResultsListProps{
     results?: PromiseResult[]
+    domain: string
 }
 
-const ResultsList = ({ results }: ResultsListProps) => {
+const ResultsList = ({ results, domain }: ResultsListProps) => {
+    const { view, rates } = usePricing()
     if (!results || results.length === 0) return null
 
     // Parse price to number for comparison
@@ -15,6 +18,9 @@ const ResultsList = ({ results }: ResultsListProps) => {
         const num = parseFloat(price.replace(/[^0-9.]/g, ''))
         return isNaN(num) ? Infinity : num
     }
+
+    // Compare in USD so ₹ and $ prices rank correctly; without rates, fall back to raw numbers
+    const sortValue = (value: RegistrarResult) => view(value).usd ?? (rates ? Infinity : parsePrice(value.price))
 
     // Helper to check if result is purchasable (available or aftermarket)
     const isPurchasable = (r: PromiseResult) => {
@@ -30,7 +36,7 @@ const ResultsList = ({ results }: ResultsListProps) => {
         .sort((a, b) => {
         // After isPurchasable filter, we know these are fulfilled
         if (a.status === 'fulfilled' && b.status === 'fulfilled') {
-            return parsePrice(a.value.price) - parsePrice(b.value.price)
+            return sortValue(a.value) - sortValue(b.value)
         }
         return 0
     })
@@ -44,7 +50,7 @@ const ResultsList = ({ results }: ResultsListProps) => {
     return (
         <div>
             {recommended && (
-                <RegistrarCard result={recommended} isRecommended />
+                <RegistrarCard result={recommended} domain={domain} isRecommended />
             )}
 
             {(restAvailable.length > 0 || otherResults.length > 0) && (
@@ -64,10 +70,10 @@ const ResultsList = ({ results }: ResultsListProps) => {
                         border: '1px solid #eee',
                     }}>
                         {restAvailable.map((result: PromiseResult, i: number) => (
-                            <RegistrarCard key={i} result={result} />
+                            <RegistrarCard key={i} result={result} domain={domain} />
                         ))}
                         {otherResults.map((result: PromiseResult, i: number) => (
-                            <RegistrarCard key={`other-${i}`} result={result} />
+                            <RegistrarCard key={`other-${i}`} result={result} domain={domain} />
                         ))}
                     </div>
                 </div>
