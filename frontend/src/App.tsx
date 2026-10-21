@@ -1,10 +1,10 @@
 // ADD THIS LATER > Some links on this site are affiliate links. We may earn a commission at no extra cost to you.
 import './App.css'
 import zigzag from './assets/Vector 1.svg'
-import heart from './assets/heart.svg'
 import LogoMarquee from './components/logoMarquee'
 import Loader from './components/loader_animations/loader'
-import GithubLink from './components/GithubLink'
+import SocialLinks from './components/SocialLinks'
+import { track } from './analytics'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { parse } from 'tldts'
@@ -22,6 +22,7 @@ function App() {
     }
 
     setError(false)
+    track('search', { search_term: domain.trim(), from: 'home' })
     const encodedDomain = encodeURIComponent(domain.trim())
     nav(`/results?domain=${encodedDomain}`)
   }
@@ -38,11 +39,7 @@ function App() {
             <img src={zigzag} className="brand-underline" alt="" />
           </div>
           <div className="header-actions">
-            <GithubLink />
-            <button className="icon-button" aria-label="favorites">
-              <img src={heart} width={22} height={22} alt="favorites" />
-            </button>
-            <a className="signin">Sign in</a>
+            <SocialLinks />
           </div>
         </header>
       </div>

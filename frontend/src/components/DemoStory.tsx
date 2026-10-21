@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import RegistrarLogo from './RegistrarLogo'
 import { REPO_URL } from '../config'
+import { track } from '../analytics'
 import type { Registrar } from '../types'
 import './demoStory.css'
 
@@ -75,6 +76,10 @@ const DemoStory = ({ domain }: { domain: string }) => {
     if (!finished) played.current = true
 
     useEffect(() => {
+        if (finished && played.current) track('demo_finished', { domain })
+    }, [finished, domain])
+
+    useEffect(() => {
         if (finished) return
         const id = setTimeout(() => setT((x) => Math.min(END_AT, Math.round((x + 0.1) * 10) / 10)), 100)
         return () => clearTimeout(id)
@@ -84,6 +89,7 @@ const DemoStory = ({ domain }: { domain: string }) => {
     const narration = finished ? 'Done. Here’s the catch…' : STEPS[stepIndex]!.text
 
     async function copyCommand() {
+        track('copy_command')
         try {
             await navigator.clipboard.writeText(COMMAND)
             setCopied(true)
@@ -101,7 +107,7 @@ const DemoStory = ({ domain }: { domain: string }) => {
                 </h2>
                 <span className="story-demo-pill">DEMO</span>
                 {!finished && (
-                    <button className="story-skip" onClick={() => setT(END_AT)}>Skip ›</button>
+                    <button className="story-skip" onClick={() => { track('demo_skipped', { at_seconds: t }); setT(END_AT) }}>Skip ›</button>
                 )}
             </div>
 
@@ -251,8 +257,8 @@ const DemoStory = ({ domain }: { domain: string }) => {
                         </p>
 
                         <div className="story-cta-actions">
-                            <a className="story-btn-light" href={REPO_URL} target="_blank" rel="noopener noreferrer">View on GitHub</a>
-                            <button className="story-btn-ghost" onClick={() => setT(0)}>Replay demo</button>
+                            <a className="story-btn-light" href={REPO_URL} target="_blank" rel="noopener noreferrer" onClick={() => track('github_click', { placement: 'demo_end' })}>View on GitHub</a>
+                            <button className="story-btn-ghost" onClick={() => { track('demo_replay'); setT(0) }}>Replay demo</button>
                         </div>
                     </motion.section>
                 )}

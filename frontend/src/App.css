@@ -252,9 +252,9 @@ span::selection{
   .signin{font-size: 0.8rem;}
 }
 
-.github-link{
+.social-link{
   display: inline-flex;
   align-items: center;
   transition: opacity 150ms ease;
 }
-.github-link:hover{ opacity: 0.6; }
+.social-link:hover{ opacity: 0.6; }

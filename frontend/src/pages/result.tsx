@@ -2,13 +2,13 @@ import { useState, useEffect,  } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { parse } from 'tldts'
 import zigzag from '../assets/Vector 1.svg'
-import heart from '../assets/heart.svg'
 import './result.css'
 import handloader from '../assets/handLoader.json'
 import Lottie from "lottie-react"
 import StatusBadge from '../components/StatusBadge'
 import ResultsList from '../components/ResultsList'
-import GithubLink from '../components/GithubLink'
+import SocialLinks from '../components/SocialLinks'
+import { track } from '../analytics'
 import DemoStory from '../components/DemoStory'
 import { API_URL, IS_DEMO } from '../config'
 import type { PromiseResult } from "../types"
@@ -66,6 +66,7 @@ export const ResultPage = () => {
         }
         
         setError(false)
+        track('search', { search_term: domain.trim(), from: 'results' })
         const encodedDomain = encodeURIComponent(domain.trim())
         
         // If same domain, trigger retry. Otherwise navigate.
@@ -90,11 +91,7 @@ export const ResultPage = () => {
             </form>
 
             <div className="other-actions">
-                <GithubLink />
-                <button className="icon-button" aria-label="favorites">
-                <img src={heart} width={22} height={22} alt="favorites" />
-                </button>
-                <a className="signin">Sign in</a>
+                <SocialLinks />
             </div>
         </div>
 

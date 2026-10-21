@@ -6,3 +6,4 @@ export const IS_DEMO = import.meta.env.VITE_APP_MODE === 'demo'
 export const API_URL: string = import.meta.env.VITE_API_URL ?? ''
 
 export const REPO_URL = 'https://github.com/Json604/domainak'
+export const X_URL = 'https://x.com/infin8erer'
